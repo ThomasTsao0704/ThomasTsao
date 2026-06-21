@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Thomas Tsao · 自動化與全端開發</title>
+<!--
+  ┌───────────────────────────────────────────────────────────┐
+  │  個人作品集 · 單頁式 Portfolio                              │
+  │  要改的地方都有標註「← 改這裡」：                          │
+  │   1. 名字（搜尋「你的名字」）                               │
+  │   2. 聯絡資訊（Email / GitHub / LinkedIn）                  │
+  │   3. 作品連結（Demo / GitHub）                              │
+  │   4. 履歷 PDF 連結                                          │
+  └───────────────────────────────────────────────────────────┘
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#0E0F13;
+    --bg-2:#15171E;
+    --bg-3:#1B1E27;
+    --line:#272B36;
+    --line-2:#363C4A;
+    --text:#C9CDD6;
+    --dim:#828B9E;
+    --head:#F3F4F8;
+    --accent:#F4B740;
+    --accent-deep:#C98A1E;
+    --accent-soft:rgba(244,183,64,.12);
+    --accent-glow:rgba(244,183,64,.28);
+    --maxw:1180px;
+    --r:14px;
+    --ease:cubic-bezier(.22,.61,.36,1);
+    --display:"Space Grotesk",system-ui,sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,monospace;
+    --body:"IBM Plex Sans",system-ui,sans-serif;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--body);
+    font-size:16px;
+    line-height:1.7;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  body::before{
+    /* 極淡的試算表網點，呼應 Google Sheets / GAS 的工作基底 */
+    content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:radial-gradient(circle at 1px 1px,rgba(255,255,255,.035) 1px,transparent 0);
+    background-size:26px 26px;
+    mask-image:linear-gradient(to bottom,#000 0%,transparent 70%);
+  }
+  a{color:inherit;text-decoration:none}
+  ::selection{background:var(--accent);color:#0c0c0c}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}
+
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px;position:relative;z-index:1}
+  .eyebrow{
+    font-family:var(--mono);font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--accent);display:inline-flex;align-items:center;gap:.6em;
+  }
+  .eyebrow::before{content:"";width:18px;height:1px;background:var(--accent);display:inline-block}
+
+  /* ── NAV ─────────────────────────────────── */
+  header.nav{
+    position:sticky;top:0;z-index:50;
+    backdrop-filter:blur(12px);
+    background:rgba(14,15,19,.72);
+    border-bottom:1px solid transparent;
+    transition:border-color .3s var(--ease),background .3s var(--ease);
+  }
+  header.nav.scrolled{border-color:var(--line);background:rgba(14,15,19,.88)}
+  .nav-inner{display:flex;align-items:center;justify-content:space-between;height:66px}
+  .brand{font-family:var(--mono);font-weight:600;font-size:.95rem;color:var(--head);letter-spacing:.02em}
+  .brand .dot{color:var(--accent)}
+  .nav-links{display:flex;gap:30px;align-items:center}
+  .nav-links a{font-size:.9rem;color:var(--dim);transition:color .2s;position:relative}
+  .nav-links a:hover,.nav-links a.active{color:var(--head)}
+  .nav-links a.active::after{
+    content:"";position:absolute;left:0;bottom:-22px;height:2px;width:100%;background:var(--accent)
+  }
+  .nav-cta{
+    font-family:var(--mono);font-size:.82rem;border:1px solid var(--line-2);
+    padding:8px 16px;border-radius:8px;color:var(--head);transition:.25s var(--ease);
+  }
+  .nav-cta:hover{border-color:var(--accent);color:var(--accent);box-shadow:0 0 0 1px var(--accent-soft)}
+  .menu-btn{display:none;background:none;border:1px solid var(--line-2);color:var(--head);
+    width:42px;height:38px;border-radius:8px;font-size:1.1rem;cursor:pointer}
+
+  /* ── HERO ────────────────────────────────── */
+  .hero{padding:clamp(56px,9vw,110px) 0 clamp(60px,8vw,96px)}
+  .hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center}
+  .hero h1{
+    font-family:var(--display);font-weight:600;color:var(--head);
+    font-size:clamp(2.5rem,6vw,4.4rem);line-height:1.04;letter-spacing:-.02em;
+    margin:22px 0 0;
+  }
+  .hero h1 .hl{color:var(--accent)}
+  .hero .lede{margin-top:24px;font-size:1.12rem;max-width:34ch;color:var(--text)}
+  .hero-cta{display:flex;gap:14px;margin-top:34px;flex-wrap:wrap}
+  .btn{
+    font-family:var(--mono);font-size:.9rem;font-weight:500;
+    padding:13px 22px;border-radius:10px;cursor:pointer;transition:.25s var(--ease);
+    display:inline-flex;align-items:center;gap:.5em;border:1px solid transparent;
+  }
+  .btn-primary{background:var(--accent);color:#120d02;font-weight:600}
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 30px -10px var(--accent-glow)}
+  .btn-ghost{border-color:var(--line-2);color:var(--head)}
+  .btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+  .core-skills{display:flex;flex-wrap:wrap;gap:10px;margin-top:38px}
+  .chip{
+    font-family:var(--mono);font-size:.78rem;color:var(--dim);
+    border:1px solid var(--line);padding:6px 12px;border-radius:999px;
+    transition:.2s;
+  }
+  .chip:hover{color:var(--head);border-color:var(--line-2)}
+
+  /* ── 自動化執行軌跡 (signature) ───────────── */
+  .runner{
+    background:linear-gradient(180deg,var(--bg-3),var(--bg-2));
+    border:1px solid var(--line);border-radius:16px;overflow:hidden;
+    box-shadow:0 30px 70px -30px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.02) inset;
+  }
+  .runner-bar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:13px 16px;border-bottom:1px solid var(--line);background:rgba(0,0,0,.18);
+  }
+  .runner-file{font-family:var(--mono);font-size:.84rem;color:var(--head);display:flex;align-items:center;gap:9px}
+  .runner-file .gs{color:var(--accent)}
+  .runner-status{
+    font-family:var(--mono);font-size:.72rem;color:var(--dim);
+    display:flex;align-items:center;gap:7px;
+  }
+  .pulse{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 0 var(--accent-glow);animation:pulse 1.6s infinite}
+  .runner-status.done .pulse{animation:none;box-shadow:none}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 var(--accent-glow)}70%{box-shadow:0 0 0 7px transparent}100%{box-shadow:0 0 0 0 transparent}}
+  .runner-body{
+    font-family:var(--mono);font-size:.82rem;line-height:1.95;
+    padding:18px 18px 20px;min-height:300px;
+  }
+  .log-line{display:flex;gap:12px;opacity:0;transform:translateY(4px);align-items:baseline}
+  .log-line.in{opacity:1;transform:none;transition:.32s var(--ease)}
+  .log-time{color:#5b6172;flex-shrink:0}
+  .log-tag{color:var(--accent);flex-shrink:0;width:74px;display:inline-block}
+  .log-msg{color:var(--text)}
+  .log-line.final .log-tag{color:#7ee0a0}
+  .log-line.final .log-msg{color:var(--head)}
+  .caret{display:inline-block;width:8px;height:1.05em;background:var(--accent);vertical-align:text-bottom;animation:blink 1s steps(2) infinite;transform:translateY(2px)}
+  @keyframes blink{50%{opacity:0}}
+
+  /* ── 通用區塊 ─────────────────────────────── */
+  section.block{padding:clamp(70px,9vw,120px) 0;position:relative}
+  .block-head{max-width:60ch;margin-bottom:48px}
+  .block-head h2{
+    font-family:var(--display);font-weight:600;color:var(--head);
+    font-size:clamp(1.85rem,3.6vw,2.6rem);line-height:1.12;letter-spacing:-.015em;margin-top:16px;
+  }
+  .reveal{opacity:0;transform:translateY(22px);transition:opacity .7s var(--ease),transform .7s var(--ease)}
+  .reveal.shown{opacity:1;transform:none}
+
+  /* ── ABOUT ───────────────────────────────── */
+  .about-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start}
+  .pullquote{
+    font-family:var(--display);font-weight:500;color:var(--head);
+    font-size:clamp(1.4rem,2.6vw,1.95rem);line-height:1.4;letter-spacing:-.01em;
+    border-left:2px solid var(--accent);padding-left:24px;
+  }
+  .about-body p{margin-bottom:18px;color:var(--text)}
+  .about-body p:last-child{margin-bottom:0}
+  .about-meta{display:flex;flex-wrap:wrap;gap:28px;margin-top:30px;padding-top:26px;border-top:1px solid var(--line)}
+  .about-meta .m b{display:block;font-family:var(--display);font-size:1.7rem;color:var(--accent);line-height:1}
+  .about-meta .m span{font-family:var(--mono);font-size:.74rem;color:var(--dim);letter-spacing:.05em}
+
+  /* ── SKILLS ──────────────────────────────── */
+  .skills-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+  .skill-card{
+    background:var(--bg-2);border:1px solid var(--line);border-radius:var(--r);
+    padding:24px 22px;transition:.3s var(--ease);
+  }
+  .skill-card:hover{border-color:var(--line-2);transform:translateY(-3px)}
+  .skill-card h3{font-family:var(--mono);font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:4px}
+  .skill-card .lvl{font-size:.78rem;color:var(--dim);margin-bottom:18px;display:block}
+  .skill-card ul{list-style:none;display:flex;flex-direction:column;gap:9px}
+  .skill-card li{display:flex;align-items:center;gap:9px;font-size:.94rem;color:var(--text)}
+  .skill-card li::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--line-2);flex-shrink:0}
+  .skill-card li.key::before{background:var(--accent)}
+  .skill-card li.key{color:var(--head)}
+
+  /* ── PROJECTS ────────────────────────────── */
+  .feature{
+    display:grid;grid-template-columns:1fr 1fr;gap:0;
+    background:var(--bg-2);border:1px solid var(--line);border-radius:18px;overflow:hidden;
+  }
+  .feature-info{padding:clamp(28px,4vw,46px)}
+  .tag-row{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 0}
+  .tag{font-family:var(--mono);font-size:.74rem;color:var(--accent);background:var(--accent-soft);padding:5px 11px;border-radius:6px}
+  .feature-info h3{font-family:var(--display);font-weight:600;color:var(--head);font-size:1.9rem;margin:14px 0 10px;letter-spacing:-.01em}
+  .feature-info .role{font-family:var(--mono);font-size:.8rem;color:var(--dim);margin-bottom:18px}
+  .feature-info .role b{color:var(--accent)}
+  .feat-list{list-style:none;margin:20px 0 4px;display:grid;gap:10px}
+  .feat-list li{position:relative;padding-left:22px;font-size:.95rem}
+  .feat-list li::before{content:"→";position:absolute;left:0;color:var(--accent);font-family:var(--mono)}
+  .changelog{margin-top:24px;padding-top:20px;border-top:1px solid var(--line)}
+  .changelog .cl-h{font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin-bottom:12px}
+  .changelog ul{list-style:none;display:grid;gap:8px}
+  .changelog li{font-family:var(--mono);font-size:.8rem;color:var(--text);display:flex;gap:12px}
+  .changelog .v{color:var(--accent)}
+  .feat-links{display:flex;gap:12px;margin-top:26px;flex-wrap:wrap}
+  .link-btn{font-family:var(--mono);font-size:.84rem;padding:10px 18px;border-radius:9px;border:1px solid var(--line-2);color:var(--head);transition:.25s var(--ease);display:inline-flex;gap:.5em;align-items:center}
+  .link-btn:hover{border-color:var(--accent);color:var(--accent)}
+  .link-btn.solid{background:var(--accent);color:#120d02;border-color:var(--accent);font-weight:600}
+  .link-btn.solid:hover{transform:translateY(-2px);box-shadow:0 10px 26px -10px var(--accent-glow)}
+
+  /* 作品截圖佔位（CSS 模擬 app 介面，可換成真實截圖 <img>） */
+  .feature-shot{background:
+      radial-gradient(120% 120% at 80% 0%,rgba(244,183,64,.10),transparent 55%),
+      var(--bg-3);
+    border-left:1px solid var(--line);padding:34px;display:flex;align-items:center;justify-content:center}
+  .mock{width:100%;max-width:420px;background:var(--bg);border:1px solid var(--line-2);border-radius:12px;overflow:hidden;box-shadow:0 24px 60px -30px rgba(0,0,0,.9)}
+  .mock-top{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.02)}
+  .mock-top .t{font-family:var(--mono);font-size:.74rem;color:var(--dim)}
+  .mock-top .add{font-family:var(--mono);font-size:.7rem;background:var(--accent);color:#120d02;padding:4px 10px;border-radius:6px;font-weight:600}
+  .mock table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:.74rem}
+  .mock th{text-align:left;color:var(--dim);font-weight:500;padding:10px 14px;border-bottom:1px solid var(--line)}
+  .mock td{padding:11px 14px;border-bottom:1px solid var(--line);color:var(--text)}
+  .mock tr:last-child td{border-bottom:none}
+  .mock .st{font-size:.66rem;padding:3px 8px;border-radius:5px;background:var(--accent-soft);color:var(--accent)}
+  .mock .st.off{background:rgba(255,255,255,.05);color:var(--dim)}
+
+  .more-projects{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
+  .pcard{background:var(--bg-2);border:1px solid var(--line);border-radius:var(--r);padding:28px;transition:.3s var(--ease);display:flex;flex-direction:column}
+  .pcard:hover{border-color:var(--line-2);transform:translateY(-3px)}
+  .pcard .pc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .pcard .pc-idx{font-family:var(--mono);font-size:.74rem;color:var(--dim)}
+  .pcard h4{font-family:var(--display);font-weight:600;color:var(--head);font-size:1.25rem;margin-bottom:8px}
+  .pcard p{font-size:.94rem;color:var(--text);flex:1}
+  .pcard .tag-row{margin-top:16px}
+  .arrow{color:var(--accent);font-family:var(--mono);transition:transform .25s}
+  .pcard:hover .arrow{transform:translateX(4px)}
+
+  /* ── CONTACT ─────────────────────────────── */
+  .contact{border-top:1px solid var(--line)}
+  .contact-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:48px;align-items:center}
+  .contact h2{font-family:var(--display);font-weight:600;color:var(--head);font-size:clamp(2rem,4.5vw,3.2rem);line-height:1.08;letter-spacing:-.02em}
+  .contact h2 .hl{color:var(--accent)}
+  .contact p{margin-top:18px;max-width:38ch}
+  .contact-list{display:grid;gap:12px}
+  .clink{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;background:var(--bg-2);border:1px solid var(--line);border-radius:12px;transition:.25s var(--ease)}
+  .clink:hover{border-color:var(--accent);background:var(--bg-3);transform:translateX(4px)}
+  .clink .l{font-family:var(--mono);font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+  .clink .v{font-family:var(--body);font-size:1rem;color:var(--head);margin-top:3px}
+  .clink .ar{color:var(--accent)}
+
+  footer{border-top:1px solid var(--line);padding:36px 0}
+  .foot-inner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+  footer .brand{opacity:.9}
+  footer small{font-family:var(--mono);font-size:.76rem;color:var(--dim)}
+
+  /* ── RESPONSIVE ──────────────────────────── */
+  @media (max-width:920px){
+    .hero-grid{grid-template-columns:1fr;gap:44px}
+    .about-grid,.feature,.contact-grid{grid-template-columns:1fr}
+    .feature-shot{border-left:none;border-top:1px solid var(--line)}
+    .skills-grid{grid-template-columns:repeat(2,1fr)}
+    .more-projects{grid-template-columns:1fr}
+    .nav-links{display:none}
+    .menu-btn{display:block}
+    .nav-links.open{display:flex;position:absolute;top:66px;left:0;right:0;flex-direction:column;
+      background:var(--bg-2);border-bottom:1px solid var(--line);padding:18px 24px;gap:18px}
+    .nav-links.open a.active::after{display:none}
+  }
+  @media (max-width:520px){
+    .skills-grid{grid-template-columns:1fr}
+    .about-meta{gap:20px}
+    .runner-body{font-size:.74rem;min-height:262px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important}
+    html{scroll-behavior:auto}
+    .reveal{opacity:1;transform:none}
+    .log-line{opacity:1;transform:none}
+    .caret{display:none}
+  }
+</style>
+</head>
+<body>
+
+<!-- ══ NAV ══ -->
+<header class="nav" id="nav">
+  <div class="wrap nav-inner">
+    <!-- ← 改這裡：名字 / 代號 -->
+    <a href="#top" class="brand">Thomas Tsao<span class="dot">.</span>dev</a>
+    <nav class="nav-links" id="navlinks" aria-label="主導覽">
+      <a href="#about">關於</a>
+      <a href="#skills">技能</a>
+      <a href="#projects">作品</a>
+      <a href="#contact">聯絡</a>
+    </nav>
+    <!-- ← 改這裡：履歷 PDF 連結 -->
+    <a href="#" class="nav-cta" id="resumeTop">下載履歷 ↓</a>
+    <button class="menu-btn" id="menuBtn" aria-label="開啟選單" aria-expanded="false">☰</button>
+  </div>
+</header>
+
+<!-- ══ HERO ══ -->
+<main id="top">
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <span class="eyebrow">全端 · 自動化開發</span>
+      <h1>把複雜流程<br>變成<span class="hl">會自己跑</span>的工具。</h1>
+      <p class="lede">
+        我專注於 JavaScript 與 Google Apps Script 開發，擅長設計 API、自動化重複流程與資料管理工具，把難維護的需求拆解成乾淨的系統。
+      </p>
+      <div class="hero-cta">
+        <a href="#projects" class="btn btn-primary">查看作品 →</a>
+        <a href="#contact" class="btn btn-ghost">聯絡我</a>
+      </div>
+      <div class="core-skills">
+        <span class="chip">Google Apps Script</span>
+        <span class="chip">JavaScript</span>
+        <span class="chip">API 設計</span>
+        <span class="chip">Web 開發</span>
+        <span class="chip">資料庫設計</span>
+      </div>
+    </div>
+
+    <!-- signature：自動化執行軌跡 -->
+    <div class="runner" id="runner" aria-hidden="true">
+      <div class="runner-bar">
+        <span class="runner-file">▸ <span class="gs">daily-report.gs</span></span>
+        <span class="runner-status" id="rstatus"><span class="pulse"></span>執行中</span>
+      </div>
+      <div class="runner-body" id="rbody"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ ABOUT ══ -->
+<section class="block" id="about">
+  <div class="wrap">
+    <div class="block-head reveal">
+      <span class="eyebrow">關於我</span>
+    </div>
+    <div class="about-grid">
+      <div class="reveal">
+        <p class="pullquote">「我把重複、容易出錯的人工流程，變成可靠、好維護的自動化系統。」</p>
+        <div class="about-meta">
+          <div class="m"><b>3+</b><span>年開發經驗</span></div>
+          <div class="m"><b>10+</b><span>自動化專案</span></div>
+          <div class="m"><b>全端</b><span>前後端皆可</span></div>
+        </div>
+      </div>
+      <!-- ← 改這裡：把下面三段換成你自己的故事 -->
+      <div class="about-body reveal">
+        <p>我從用 Google Apps Script 解決身邊的重複作業開始寫程式——一份每天要手動整理的報表、一個總是漏寄的通知。當第一個腳本替我把整個下午的工作壓縮成幾秒鐘時，我就確定了方向。</p>
+        <p>現在我做的事，是把這種「讓電腦替人做事」的能力做得更紮實：設計清楚的 API、規劃合理的資料結構、寫出別人接手也看得懂的程式，並把使用者體驗放在心上。</p>
+        <p>我相信好的工具不該炫技，而是真的解決問題、而且能長期維護。如果你有一段卡住的流程，我大概會忍不住想把它自動化掉。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ SKILLS ══ -->
+<section class="block" id="skills">
+  <div class="wrap">
+    <div class="block-head reveal">
+      <span class="eyebrow">技能</span>
+      <h2>實際用得上的工具與技術</h2>
+    </div>
+    <div class="skills-grid">
+      <div class="skill-card reveal">
+        <h3>Frontend</h3><span class="lvl">主力</span>
+        <ul>
+          <li class="key">JavaScript</li>
+          <li class="key">HTML / CSS</li>
+          <li>響應式設計</li>
+          <li>RWD / UX</li>
+        </ul>
+      </div>
+      <div class="skill-card reveal">
+        <h3>Backend</h3><span class="lvl">主力</span>
+        <ul>
+          <li class="key">Google Apps Script</li>
+          <li class="key">REST API 設計</li>
+          <li>Token 驗證</li>
+          <li>排程觸發器</li>
+        </ul>
+      </div>
+      <div class="skill-card reveal">
+        <h3>Database</h3><span class="lvl">熟悉</span>
+        <ul>
+          <li class="key">Google Sheets</li>
+          <li>IndexedDB</li>
+          <li>資料結構設計</li>
+          <li>CRUD 流程</li>
+        </ul>
+      </div>
+      <div class="skill-card reveal">
+        <h3>Tools</h3><span class="lvl">日常使用</span>
+        <ul>
+          <li>Git / GitHub</li>
+          <li>VS Code</li>
+          <li>Clasp</li>
+          <li>Postman</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ PROJECTS ══ -->
+<section class="block" id="projects">
+  <div class="wrap">
+    <div class="block-head reveal">
+      <span class="eyebrow">精選作品</span>
+      <h2>能展示完整能力的代表專案</h2>
+    </div>
+
+    <!-- 主打：雞尾酒管理系統 -->
+    <div class="feature reveal">
+      <div class="feature-info">
+        <span class="eyebrow">主打 App · 全端</span>
+        <h3>雞尾酒管理系統</h3>
+        <p class="role">我的角色：<b>全端開發</b>（前端介面 · API · 資料層）</p>
+        <p>一套讓使用者登入後管理雞尾酒配方的應用程式，從前端介面到後端 API 與資料儲存全部自行打造，重點放在權限控管與資料正確性。</p>
+        <ul class="feat-list">
+          <li>使用者登入與 Token 驗證，保護每個 API 端點</li>
+          <li>配方完整 CRUD：新增、查詢、編輯、刪除</li>
+          <li>以 Google Sheets 作為資料層，免維運伺服器</li>
+          <li>響應式介面，手機與桌面皆可操作</li>
+        </ul>
+        <div class="tag-row">
+          <span class="tag">GAS</span><span class="tag">JavaScript</span>
+          <span class="tag">HTML</span><span class="tag">CSS</span>
+        </div>
+        <div class="changelog">
+          <!-- ← 改這裡：可換成真實更新紀錄 -->
+          <div class="cl-h">更新紀錄</div>
+          <ul>
+            <li><span class="v">v1.2</span> 加入配方搜尋與分類篩選</li>
+            <li><span class="v">v1.1</span> 導入 Token 驗證與登入流程</li>
+            <li><span class="v">v1.0</span> 完成核心 CRUD 與管理介面</li>
+          </ul>
+        </div>
+        <div class="feat-links">
+          <!-- ← 改這裡：Demo / GitHub 連結 -->
+          <a href="https://script.google.com/macros/s/AKfycbwrnq0RFdvxJc0iT02gI9VTRcwxWhVmO3-tARoJFtn6FDyijEJo4AcLPjCkQ4fXcDHYOA/exec" class="link-btn solid" target="_blank" rel="noopener">▸ 線上試用</a>
+          <a href="https://github.com/ThomasTsao0704" class="link-btn" target="_blank" rel="noopener">⌥ GitHub 原始碼</a>
+        </div>
+      </div>
+
+      <!-- 截圖佔位（可整塊換成 <img src="screenshot.png" alt="管理介面">） -->
+      <div class="feature-shot">
+        <div class="mock" role="img" aria-label="雞尾酒管理系統管理介面示意">
+          <div class="mock-top"><span class="t">cocktails · 管理介面</span><span class="add">+ 新增配方</span></div>
+          <table>
+            <thead><tr><th>名稱</th><th>基酒</th><th>狀態</th></tr></thead>
+            <tbody>
+              <tr><td>Negroni</td><td>Gin</td><td><span class="st">已上架</span></td></tr>
+              <tr><td>Old Fashioned</td><td>Whiskey</td><td><span class="st">已上架</span></td></tr>
+              <tr><td>Margarita</td><td>Tequila</td><td><span class="st off">草稿</span></td></tr>
+              <tr><td>Mojito</td><td>Rum</td><td><span class="st">已上架</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 其他作品（← 改這裡：換成你其他的專案，或先刪掉留待補上） -->
+    <div class="more-projects">
+      <a href="#" class="pcard reveal">
+        <div class="pc-top"><span class="pc-idx">// project</span><span class="arrow">→</span></div>
+        <h4>每日報表自動化</h4>
+        <p>排程觸發器每日讀取試算表、彙整資料並自動寄送日報，取代原本的人工整理流程。</p>
+        <div class="tag-row"><span class="tag">GAS</span><span class="tag">排程</span><span class="tag">Email</span></div>
+      </a>
+      <a href="#" class="pcard reveal">
+        <div class="pc-top"><span class="pc-idx">// project</span><span class="arrow">→</span></div>
+        <h4>表單資料 API</h4>
+        <p>以 Apps Script 對外提供 REST 風格 API，串接前端表單與資料儲存，含驗證與錯誤處理。</p>
+        <div class="tag-row"><span class="tag">REST API</span><span class="tag">JavaScript</span></div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ══ CONTACT ══ -->
+<section class="block contact" id="contact">
+  <div class="wrap contact-grid">
+    <div class="reveal">
+      <span class="eyebrow">聯絡我</span>
+      <h2>有想<span class="hl">自動化</span>的流程？<br>聊聊吧。</h2>
+      <p>不論是工作機會、專案合作，或只是想討論一個卡住的流程，都歡迎找我。</p>
+    </div>
+    <div class="contact-list reveal">
+      <!-- ← 改這裡：填入真實聯絡資訊 -->
+      <a href="s01yg3642@gmail.com" class="clink">
+        <span><span class="l">Email</span><span class="v">s01yg3642@gmail.com</span></span><span class="ar">→</span>
+      </a>
+      <a href="https://github.com/ThomasTsao0704" class="clink" target="_blank" rel="noopener">
+        <span><span class="l">GitHub</span><span class="v">github.com/ThomasTsao0704</span></span><span class="ar">→</span>
+      </a>
+      <a href="https://linkedin.com/in/yourname" class="clink" target="_blank" rel="noopener">
+        <span><span class="l">LinkedIn</span><span class="v">linkedin.com/in/yourname</span></span><span class="ar">→</span>
+      </a>
+      <a href="#" class="clink" id="resumeBottom">
+        <span><span class="l">Resume</span><span class="v">下載 PDF 履歷</span></span><span class="ar">↓</span>
+      </a>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap foot-inner">
+    <span class="brand">Thomas Tsao<span class="dot">.</span>dev</span>
+    <small>© <span id="yr"></span> · 以 JavaScript 與 Google Apps Script 打造</small>
+  </div>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  document.getElementById("yr").textContent = new Date().getFullYear();
+
+  /* nav 捲動陰影 + scrollspy */
+  var nav = document.getElementById("nav");
+  var links = Array.prototype.slice.call(document.querySelectorAll("#navlinks a"));
+  var sections = links.map(function(a){ return document.querySelector(a.getAttribute("href")); });
+
+  function onScroll(){
+    nav.classList.toggle("scrolled", window.scrollY > 12);
+    var pos = window.scrollY + 120, current = null;
+    sections.forEach(function(sec,i){
+      if(sec && sec.offsetTop <= pos) current = links[i];
+    });
+    links.forEach(function(l){ l.classList.remove("active"); });
+    if(current) current.classList.add("active");
+  }
+  window.addEventListener("scroll", onScroll, {passive:true});
+  onScroll();
+
+  /* 行動版選單 */
+  var menuBtn = document.getElementById("menuBtn");
+  var navlinks = document.getElementById("navlinks");
+  menuBtn.addEventListener("click", function(){
+    var open = navlinks.classList.toggle("open");
+    menuBtn.setAttribute("aria-expanded", open ? "true":"false");
+  });
+  navlinks.addEventListener("click", function(e){
+    if(e.target.tagName === "A"){ navlinks.classList.remove("open"); menuBtn.setAttribute("aria-expanded","false"); }
+  });
+
+  /* 履歷連結提示（未設定時） */
+  ["resumeTop","resumeBottom"].forEach(function(id){
+    var el = document.getElementById(id);
+    el.addEventListener("click", function(e){
+      if(el.getAttribute("href") === "#"){
+        e.preventDefault();
+        alert("把這個連結改成你的 PDF 履歷網址即可（搜尋 resumeTop / resumeBottom）。");
+      }
+    });
+  });
+
+  /* scroll reveal */
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if(en.isIntersecting){ en.target.classList.add("shown"); io.unobserve(en.target); }
+    });
+  }, {threshold:0.12, rootMargin:"0px 0px -40px 0px"});
+  document.querySelectorAll(".reveal").forEach(function(el){ io.observe(el); });
+
+  /* ── 自動化執行軌跡動畫 ── */
+  var steps = [
+    {t:"09:00:01", tag:"trigger",  msg:"每日排程觸發"},
+    {t:"09:00:01", tag:"read",     msg:"讀取試算表「訂單」… 248 列"},
+    {t:"09:00:02", tag:"validate", msg:"驗證資料… 0 筆錯誤"},
+    {t:"09:00:02", tag:"transform",msg:"彙整為當日報表"},
+    {t:"09:00:03", tag:"write",    msg:"寫入分頁「日報」"},
+    {t:"09:00:03", tag:"notify",   msg:"寄送 Email 給 3 位收件者"},
+    {t:"09:00:03", tag:"done",     msg:"完成 · 1.9s · 248 列已處理", final:true}
+  ];
+  var body = document.getElementById("rbody");
+  var status = document.getElementById("rstatus");
+
+  function makeLine(s){
+    var line = document.createElement("div");
+    line.className = "log-line" + (s.final ? " final" : "");
+    line.innerHTML =
+      '<span class="log-time">'+s.t+'</span>'+
+      '<span class="log-tag">'+s.tag+'</span>'+
+      '<span class="log-msg">'+s.msg+'</span>';
+    return line;
+  }
+
+  if(reduce){
+    steps.forEach(function(s){ var l = makeLine(s); l.classList.add("in"); body.appendChild(l); });
+    status.classList.add("done");
+    status.innerHTML = '<span class="pulse"></span>完成 ✓';
+  } else {
+    var i = 0;
+    var caret = document.createElement("span");
+    caret.className = "caret";
+    body.appendChild(caret);
+    function next(){
+      if(i >= steps.length){
+        caret.remove();
+        status.classList.add("done");
+        status.innerHTML = '<span class="pulse"></span>完成 ✓';
+        return;
+      }
+      var l = makeLine(steps[i]);
+      body.insertBefore(l, caret);
+      requestAnimationFrame(function(){ l.classList.add("in"); });
+      i++;
+      setTimeout(next, i === 1 ? 620 : 560);
+    }
+    setTimeout(next, 650);
+  }
+})();
+</script>
+</body>
+</html>
