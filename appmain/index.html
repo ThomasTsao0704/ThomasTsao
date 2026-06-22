@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>洪啟 · The Prime Mover</title>
+<meta name="description" content="洪啟 The Prime Mover — 個人數位生態系的啟動樞紐。專注於內在對話與生存策略。">
+
+<!-- PWA hints (完整安裝還需另放 manifest.json + sw.js，見檔末註解) -->
+<meta name="theme-color" content="#0C0E0D">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="洪啟">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;600;700&family=Noto+Sans+TC:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    /* 墨 — 暖調近黑，不是純藍黑的 cyberpunk */
+    --void:        #0C0E0D;
+    --void-soft:   #101312;
+    --surface:     rgba(22, 26, 24, 0.55);
+    --surface-hi:  rgba(30, 36, 33, 0.72);
+    --line:        #232826;
+    --line-hi:     #323a36;
+    /* 茶墨綠 — 功能性強調色，克制使用 */
+    --tea:         #6E8B72;
+    --tea-glow:    #8FB395;
+    /* 硃砂 — 全頁唯一的紅，只屬於識別 */
+    --cinnabar:    #B23A2E;
+    --cinnabar-hi: #C7493B;
+    /* 紙 — 米白文字，帶舊紙暖度，非純白 */
+    --paper:       #E6E3D9;
+    --paper-dim:   #B8B6AC;
+    --muted:       #6B716B;
+    --muted-deep:  #4B514C;
+
+    --serif: "Noto Serif TC", serif;
+    --sans:  "Noto Sans TC", system-ui, sans-serif;
+    --mono:  "JetBrains Mono", ui-monospace, monospace;
+  }
+
+  *{ margin:0; padding:0; box-sizing:border-box; }
+
+  html{ -webkit-text-size-adjust:100%; }
+
+  body{
+    min-height:100vh;
+    background:
+      radial-gradient(120% 80% at 18% 0%, rgba(110,139,114,0.06) 0%, transparent 55%),
+      radial-gradient(90% 60% at 100% 100%, rgba(110,139,114,0.04) 0%, transparent 50%),
+      var(--void);
+    color:var(--paper);
+    font-family:var(--sans);
+    font-weight:300;
+    line-height:1.6;
+    letter-spacing:0.01em;
+    -webkit-font-smoothing:antialiased;
+    display:flex;
+    flex-direction:column;
+  }
+
+  .wrap{
+    width:100%;
+    max-width:1080px;
+    margin:0 auto;
+    padding:0 clamp(20px, 5vw, 56px);
+  }
+
+  /* ───── 通用標籤（系統/數據語言用等寬字） ───── */
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:11px;
+    font-weight:500;
+    letter-spacing:0.34em;
+    text-transform:uppercase;
+    color:var(--tea);
+  }
+
+  /* ═════════════ HERO ═════════════ */
+  header{ padding-top:clamp(48px, 9vw, 96px); padding-bottom:clamp(40px, 7vw, 72px); }
+
+  .hero{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:40px;
+    flex-wrap:wrap;
+  }
+
+  .brand{ display:flex; align-items:center; gap:22px; }
+
+  /* 硃砂印 — 全頁簽名元素 */
+  .seal{
+    flex-shrink:0;
+    width:72px; height:72px;
+    border-radius:7px;
+    background:
+      radial-gradient(140% 140% at 30% 25%, var(--cinnabar-hi), var(--cinnabar) 60%, #97291f 100%);
+    display:grid;
+    grid-template-columns:1fr;
+    place-items:center;
+    box-shadow:
+      inset 0 0 0 1.5px rgba(255,235,225,0.14),
+      inset 0 0 14px rgba(0,0,0,0.35),
+      0 6px 22px rgba(178,58,46,0.22);
+    transform:rotate(-3deg);
+    position:relative;
+    isolation:isolate;
+  }
+  /* 印面紋理：細微缺墨感 */
+  .seal::after{
+    content:""; position:absolute; inset:0; border-radius:7px;
+    background:
+      radial-gradient(60% 40% at 70% 80%, rgba(0,0,0,0.18), transparent 70%),
+      radial-gradient(40% 50% at 15% 30%, rgba(0,0,0,0.12), transparent 70%);
+    mix-blend-mode:multiply; z-index:1;
+  }
+  .seal span{
+    font-family:var(--serif);
+    font-weight:700;
+    font-size:25px;
+    line-height:0.96;
+    color:#F4ECE4;
+    letter-spacing:0;
+    writing-mode:vertical-rl;
+    text-shadow:0 1px 0 rgba(0,0,0,0.25);
+    z-index:2;
+  }
+
+  .brand-text .name{
+    font-family:var(--serif);
+    font-weight:600;
+    font-size:clamp(30px, 5.4vw, 44px);
+    line-height:1;
+    color:var(--paper);
+    letter-spacing:0.04em;
+  }
+  .brand-text .latin{
+    font-family:var(--mono);
+    font-size:12px;
+    letter-spacing:0.3em;
+    color:var(--tea);
+    text-transform:uppercase;
+    margin-top:10px;
+  }
+  .brand-text .tagline{
+    font-size:14px;
+    color:var(--paper-dim);
+    margin-top:14px;
+    max-width:30ch;
+  }
+
+  /* 右側微縮儀表板 */
+  .status{
+    text-align:right;
+    min-width:200px;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    gap:14px;
+  }
+  .status .date{
+    font-family:var(--mono);
+    font-size:12px;
+    letter-spacing:0.12em;
+    color:var(--paper-dim);
+  }
+  .status .date b{ color:var(--paper); font-weight:500; }
+
+  .mindset{
+    display:inline-flex; align-items:center; gap:9px;
+    padding:7px 14px 7px 12px;
+    border:1px solid var(--line);
+    border-radius:999px;
+    background:var(--surface);
+    backdrop-filter:blur(8px);
+    -webkit-backdrop-filter:blur(8px);
+    cursor:pointer;
+    font-family:var(--mono);
+    font-size:12px;
+    letter-spacing:0.05em;
+    color:var(--paper-dim);
+    transition:border-color .25s, color .25s;
+    user-select:none;
+  }
+  .mindset:hover{ border-color:var(--line-hi); color:var(--paper); }
+  .mindset .dot{
+    width:7px; height:7px; border-radius:50%;
+    background:var(--tea-glow);
+    box-shadow:0 0 8px var(--tea-glow);
+    transition:background .3s, box-shadow .3s;
+  }
+  .mindset .label-en{ color:var(--muted); }
+
+  .quote{
+    font-family:var(--serif);
+    font-style:italic;
+    font-size:14px;
+    color:var(--muted);
+    max-width:26ch;
+    border-right:2px solid var(--line-hi);
+    padding-right:14px;
+  }
+
+  /* ═════════════ APP MATRIX ═════════════ */
+  main{ flex:1; padding-bottom:clamp(48px, 8vw, 88px); }
+
+  .section-head{
+    display:flex; align-items:baseline; gap:16px;
+    padding:8px 0 24px;
+    border-top:1px solid var(--line);
+    padding-top:22px;
+  }
+  .section-head .count{
+    font-family:var(--mono); font-size:11px; color:var(--muted-deep); letter-spacing:0.2em;
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(258px, 1fr));
+    gap:16px;
+  }
+
+  .card{
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    gap:0;
+    padding:24px 24px 22px;
+    border:1px solid var(--line);
+    border-radius:14px;
+    background:var(--surface);
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+    text-decoration:none;
+    color:inherit;
+    overflow:hidden;
+    transition:transform .32s cubic-bezier(.2,.7,.2,1), border-color .32s, background .32s, box-shadow .32s;
+  }
+  .card::before{ /* hover 微光，靜止時隱形 */
+    content:""; position:absolute; inset:0; border-radius:14px;
+    background:radial-gradient(80% 60% at 50% -10%, rgba(143,179,149,0.10), transparent 65%);
+    opacity:0; transition:opacity .32s;
+    pointer-events:none;
+  }
+  .card:hover, .card:focus-visible{
+    transform:translateY(-4px);
+    border-color:var(--tea);
+    background:var(--surface-hi);
+    box-shadow:0 14px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(110,139,114,0.18);
+    outline:none;
+  }
+  .card:hover::before, .card:focus-visible::before{ opacity:1; }
+
+  .card-top{ display:flex; align-items:flex-start; justify-content:space-between; }
+  .card .num{
+    font-family:var(--mono); font-size:11px; letter-spacing:0.2em; color:var(--muted-deep);
+  }
+  .card .icon{
+    width:30px; height:30px; color:var(--tea);
+    transition:color .32s, transform .32s;
+  }
+  .card:hover .icon, .card:focus-visible .icon{ color:var(--tea-glow); transform:translateY(-1px); }
+  .card .icon svg{ width:100%; height:100%; display:block; }
+
+  .card h3{
+    font-family:var(--serif);
+    font-weight:600;
+    font-size:20px;
+    color:var(--paper);
+    margin-top:26px;
+    letter-spacing:0.02em;
+  }
+  .card .name-en{
+    font-family:var(--mono); font-size:10.5px; letter-spacing:0.22em;
+    color:var(--tea); text-transform:uppercase; margin-top:7px;
+  }
+  .card p{
+    font-size:13.5px; color:var(--paper-dim); margin-top:14px; line-height:1.62; flex:1;
+  }
+  .card .cta{
+    display:inline-flex; align-items:center; gap:8px;
+    margin-top:20px;
+    font-family:var(--mono); font-size:12px; letter-spacing:0.08em;
+    color:var(--paper);
+  }
+  .card .cta .arrow{ transition:transform .3s; color:var(--tea); }
+  .card:hover .cta .arrow, .card:focus-visible .cta .arrow{ transform:translateX(5px); color:var(--tea-glow); }
+
+  /* ═════════════ FOOTER ═════════════ */
+  footer{
+    border-top:1px solid var(--line);
+    padding:26px 0 38px;
+    margin-top:auto;
+  }
+  .foot{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:20px; flex-wrap:wrap;
+    font-family:var(--mono); font-size:11.5px; letter-spacing:0.06em;
+    color:var(--muted);
+  }
+  .sys{ display:inline-flex; align-items:center; gap:9px; color:var(--paper-dim); }
+  .sys .led{
+    width:8px; height:8px; border-radius:50%;
+    background:var(--tea-glow);
+    box-shadow:0 0 9px var(--tea-glow);
+    animation:breathe 3.4s ease-in-out infinite;
+  }
+  @keyframes breathe{ 0%,100%{opacity:.55; transform:scale(.85);} 50%{opacity:1; transform:scale(1);} }
+
+  .foot a{ color:var(--paper-dim); text-decoration:none; transition:color .25s; }
+  .foot a:hover{ color:var(--tea-glow); }
+  .foot .motto{ font-family:var(--serif); font-style:italic; color:var(--muted); letter-spacing:0; }
+  .foot .stack{ color:var(--muted-deep); }
+  .foot-mid{ display:flex; gap:18px; align-items:center; flex-wrap:wrap; }
+
+  /* ───── 載入：印章壓印 + 內容淡入 ───── */
+  .seal{ animation:stamp .55s cubic-bezier(.2,.9,.25,1) both; }
+  @keyframes stamp{
+    0%{ transform:rotate(-3deg) scale(1.35); opacity:0; }
+    55%{ transform:rotate(-3deg) scale(.96); opacity:1; }
+    100%{ transform:rotate(-3deg) scale(1); }
+  }
+  .fade{ animation:rise .7s ease both; }
+  .fade.d1{ animation-delay:.12s; }
+  .fade.d2{ animation-delay:.20s; }
+  .fade.d3{ animation-delay:.30s; }
+  @keyframes rise{ from{ opacity:0; transform:translateY(10px);} to{ opacity:1; transform:none; } }
+
+  @media (max-width:560px){
+    .hero{ flex-direction:column; gap:28px; }
+    .status{ align-items:flex-start; text-align:left; }
+    .quote{ border-right:none; border-left:2px solid var(--line-hi); padding-right:0; padding-left:14px; }
+    .foot{ flex-direction:column; align-items:flex-start; gap:14px; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation:none !important; transition:none !important; }
+  }
+
+  /* ───── 卡片現在是 button：清掉預設樣式 ───── */
+  button.card{
+    width:100%;
+    text-align:left;
+    font:inherit;
+    cursor:pointer;
+    -webkit-appearance:none;
+    appearance:none;
+  }
+
+  /* ═════════════ APP 簡介視窗 ═════════════ */
+  .modal-backdrop{
+    position:fixed; inset:0; z-index:50;
+    display:flex; align-items:center; justify-content:center;
+    padding:24px;
+    background:rgba(6,8,7,0.66);
+    backdrop-filter:blur(6px);
+    -webkit-backdrop-filter:blur(6px);
+    opacity:0;
+    transition:opacity .24s ease;
+  }
+  .modal-backdrop.show{ opacity:1; }
+  .modal-backdrop[hidden]{ display:none; }
+
+  .modal{
+    width:100%; max-width:460px;
+    background:
+      radial-gradient(120% 80% at 0% 0%, rgba(110,139,114,0.08), transparent 55%),
+      var(--void-soft);
+    border:1px solid var(--line-hi);
+    border-radius:18px;
+    padding:30px 30px 26px;
+    position:relative;
+    box-shadow:0 30px 80px rgba(0,0,0,0.6);
+    transform:translateY(14px) scale(.985);
+    transition:transform .28s cubic-bezier(.2,.8,.2,1);
+  }
+  .modal-backdrop.show .modal{ transform:none; }
+
+  .modal-close{
+    position:absolute; top:16px; right:16px;
+    width:34px; height:34px;
+    display:grid; place-items:center;
+    background:transparent; border:1px solid var(--line);
+    border-radius:9px; color:var(--muted);
+    font-size:18px; line-height:1; cursor:pointer;
+    transition:color .2s, border-color .2s;
+  }
+  .modal-close:hover, .modal-close:focus-visible{
+    color:var(--paper); border-color:var(--line-hi); outline:none;
+  }
+
+  .modal-head{ display:flex; align-items:flex-start; gap:16px; padding-right:38px; }
+  .modal-icon{
+    flex-shrink:0; width:42px; height:42px;
+    display:grid; place-items:center;
+    border:1px solid var(--line); border-radius:11px;
+    background:var(--surface); color:var(--tea);
+  }
+  .modal-icon svg{ width:24px; height:24px; }
+  .modal-num{
+    font-family:var(--mono); font-size:11px; letter-spacing:0.2em; color:var(--muted-deep);
+  }
+  .modal-title{
+    font-family:var(--serif); font-weight:600; font-size:24px;
+    color:var(--paper); letter-spacing:0.02em; margin-top:3px;
+  }
+  .modal-en{
+    font-family:var(--mono); font-size:10.5px; letter-spacing:0.22em;
+    text-transform:uppercase; color:var(--tea); margin-top:6px;
+  }
+
+  .modal-detail{
+    font-size:14.5px; line-height:1.78; color:var(--paper-dim);
+    margin-top:22px;
+  }
+
+  .modal-tags{ display:flex; flex-wrap:wrap; gap:8px; margin-top:20px; }
+  .modal-tags .tag{
+    font-family:var(--mono); font-size:11px; letter-spacing:0.04em;
+    color:var(--paper-dim);
+    padding:5px 11px;
+    border:1px solid var(--line); border-radius:7px;
+    background:var(--surface);
+  }
+
+  .modal-foot{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:16px; margin-top:28px;
+    padding-top:22px; border-top:1px solid var(--line);
+  }
+  .modal-url{
+    font-family:var(--mono); font-size:11.5px; letter-spacing:0.04em;
+    color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .modal-cta{
+    flex-shrink:0;
+    display:inline-flex; align-items:center; gap:9px;
+    padding:11px 20px;
+    font-family:var(--mono); font-size:13px; letter-spacing:0.06em;
+    color:#0C0E0D; font-weight:500;
+    background:var(--tea); border-radius:10px;
+    text-decoration:none;
+    transition:background .25s, box-shadow .25s, transform .25s;
+  }
+  .modal-cta .arrow{ transition:transform .25s; }
+  .modal-cta:hover, .modal-cta:focus-visible{
+    background:var(--tea-glow);
+    box-shadow:0 0 22px rgba(143,179,149,0.32);
+    outline:none;
+  }
+  .modal-cta:hover .arrow, .modal-cta:focus-visible .arrow{ transform:translateX(4px); }
+
+  @media (max-width:520px){
+    .modal-backdrop{ align-items:flex-end; padding:0; }
+    .modal{
+      max-width:none; border-radius:20px 20px 0 0;
+      transform:translateY(100%);
+    }
+    .modal-backdrop.show .modal{ transform:none; }
+    .modal-foot{ flex-direction:column; align-items:stretch; }
+    .modal-cta{ justify-content:center; }
+    .modal-url{ text-align:center; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="hero">
+      <div class="brand">
+        <div class="seal" title="洪啟"><span>洪啟</span></div>
+        <div class="brand-text fade d1">
+          <div class="name">洪啟</div>
+          <div class="latin">The Prime Mover</div>
+          <div class="tagline">專注於內在對話與生存策略。</div>
+        </div>
+      </div>
+
+      <div class="status fade d2">
+        <div class="date">今天 · <b id="today">—</b></div>
+        <button class="mindset" id="mindset" type="button" aria-label="切換當前市場心態">
+          <span class="dot" id="mindDot"></span>
+          <span id="mindLabel">冷靜</span>
+          <span class="label-en" id="mindEn">CALM</span>
+        </button>
+        <p class="quote" id="quote">—</p>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="section-head fade d3">
+      <span class="eyebrow">傳送門 · Portals</span>
+      <span class="count" id="count">—</span>
+    </div>
+    <div class="grid" id="grid"></div>
+  </main>
+
+  <footer>
+    <div class="foot">
+      <span class="sys"><span class="led"></span>SYSTEM ACTIVE</span>
+      <div class="foot-mid">
+        <a href="https://github.com/ThomasTsao0704" target="_blank" rel="noopener">GitHub</a>
+        <span class="motto">寫作，是與自己對話的方式。</span>
+      </div>
+      <span class="stack">GCP · Supabase · PostgreSQL</span>
+    </div>
+  </footer>
+</div>
+
+<!-- App 簡介視窗 -->
+<div class="modal-backdrop" id="modal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+    <button class="modal-close" id="mClose" type="button" aria-label="關閉">&times;</button>
+    <div class="modal-head">
+      <span class="modal-icon" id="mIcon"></span>
+      <div class="modal-heading">
+        <span class="modal-num" id="mNum"></span>
+        <h2 class="modal-title" id="mTitle"></h2>
+        <div class="modal-en" id="mEn"></div>
+      </div>
+    </div>
+    <p class="modal-detail" id="mDetail"></p>
+    <div class="modal-tags" id="mTags"></div>
+    <div class="modal-foot">
+      <span class="modal-url" id="mUrl"></span>
+      <a class="modal-cta" id="mCta" target="_blank" rel="noopener">
+        <span id="mCtaLabel">進入</span><span class="arrow">→</span>
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════════════
+   設定區 — 加 App 只要在這裡新增一筆，版面與簡介視窗自動長出來。
+   點卡片開簡介視窗，視窗內的按鈕才用 url 開新分頁進入 App。
+   detail = 視窗內完整介紹；tags = 功能標籤；desc = 卡片上的短描述。
+   ════════════════════════════════════════════════ */
+const APPS = [
+  {
+    name: "交易日誌",
+    en: "Trading Journal",
+    desc: "交易策略、心理偏誤與風險報酬率的追蹤系統。",
+    detail: "記錄每一筆進出場的理由、當下情緒與信心，並自動計算風險報酬比。回頭檢視時看的不是賺賠，而是決策品質——把市場的隨機性和自己的紀律分開來看。",
+    tags: ["進出場理由", "情緒標籤", "風險報酬比", "勝率統計"],
+    cta: "進入系統",
+    url: "https://stock.artigianoapp.net",
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="6" y1="3" x2="6" y2="21"/><rect x="3.5" y="8" width="5" height="7" rx="1"/><line x1="16" y1="3" x2="16" y2="21"/><rect x="13.5" y="6" width="5" height="9" rx="1"/></svg>'
+  },
+  {
+    name: "知識策展",
+    en: "Curation / RSS",
+    desc: "拒絕演算法垃圾，純淨的資訊過濾與閱讀空間。",
+    detail: "用 RSS 取代演算法推播，自己決定資訊從哪裡來。沒有無限下滑、沒有替你著想的推薦，只有你選擇訂閱的源頭，乾淨地讀完。",
+    tags: ["RSS 訂閱", "無演算法", "已讀進度", "離線閱讀"],
+    cta: "打開閱讀",
+    url: "https://rss.artigianoapp.net",
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h18l-7 8.5V20l-4-2v-5.5z"/></svg>'
+  },
+  {
+    name: "個人網誌",
+    en: "Journal / Blog",
+    desc: "關於職涯轉化、生存策略與內心獨白的專欄。",
+    detail: "關於職涯轉化、生存策略與內心獨白的長文專欄。寫給未來的自己，也寫給走在類似路上的人。",
+    tags: ["長文寫作", "職涯紀錄", "生存策略", "公開專欄"],
+    cta: "探索內容",
+    url: "https://thomas.artigianoapp.net",
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l3-1 11-11-2-2L5 17z"/><path d="M14.5 5.5l2 2"/><path d="M4 20l1.5-3.5"/></svg>'
+  },
+  {
+    name: "自訂工具",
+    en: "Custom Tools",
+    desc: "其他基於雲端與資料庫開發的客製化輔助工具。",
+    detail: "基於 GCP、Supabase 與 PostgreSQL 開發的客製輔助工具集合，含台股行情 API 與各式計算器。需要什麼就長什麼，不遷就現成軟體的框架。",
+    tags: ["台股 API", "雲端資料庫", "客製計算器", "API 文件"],
+    cta: "查看文件",
+    url: "https://api.artigianoapp.net/docs",
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 7L5 12l4 5"/><path d="M15 7l4 5-4 5"/></svg>'
+  }
+];
+
+/* 市場心態 — 純前端循環打卡，無後端、無紀錄 */
+const MINDSETS = [
+  { zh:"冷靜", en:"CALM",    color:"#8FB395" },
+  { zh:"觀望", en:"WATCH",   color:"#C9A86A" },
+  { zh:"進攻", en:"ENGAGE",  color:"#C7493B" },
+  { zh:"蟄伏", en:"DORMANT", color:"#6B716B" }
+];
+
+/* 自我對話金句（原創，隨機一句） */
+const QUOTES = [
+  "先穩住自己，再談勝負。",
+  "看不懂的時候，空手也是一種部位。",
+  "策略是紀律的延伸，不是情緒的出口。",
+  "能等的人，最後拿走別人等不了的東西。",
+  "市場獎勵耐心，懲罰焦躁。"
+];
+
+/* ── 渲染卡片（點擊開啟簡介視窗，非直接連結） ── */
+const grid = document.getElementById("grid");
+grid.innerHTML = APPS.map((a, i) => `
+  <button class="card fade" type="button" data-i="${i}"
+          aria-haspopup="dialog" aria-label="${a.name} — 查看簡介"
+          style="animation-delay:${0.34 + i*0.07}s">
+    <div class="card-top">
+      <span class="num">0${i+1}</span>
+      <span class="icon">${a.icon}</span>
+    </div>
+    <h3>${a.name}</h3>
+    <div class="name-en">${a.en}</div>
+    <p>${a.desc}</p>
+    <span class="cta">查看簡介<span class="arrow">→</span></span>
+  </button>
+`).join("");
+
+document.getElementById("count").textContent =
+  String(APPS.length).padStart(2, "0") + " / " + String(APPS.length).padStart(2, "0");
+
+/* ── 日期 ── */
+const now = new Date();
+const wd = ["日","一","二","三","四","五","六"][now.getDay()];
+document.getElementById("today").textContent =
+  `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,"0")}.${String(now.getDate()).padStart(2,"0")} 週${wd}`;
+
+/* ── 隨機金句 ── */
+document.getElementById("quote").textContent =
+  QUOTES[Math.floor(Math.random() * QUOTES.length)];
+
+/* ── 心態循環打卡 ── */
+let mIdx = 0;
+const mBtn = document.getElementById("mindset");
+const mDot = document.getElementById("mindDot");
+const mLbl = document.getElementById("mindLabel");
+const mEn  = document.getElementById("mindEn");
+function paintMind(){
+  const m = MINDSETS[mIdx];
+  mLbl.textContent = m.zh;
+  mEn.textContent  = m.en;
+  mDot.style.background = m.color;
+  mDot.style.boxShadow = `0 0 8px ${m.color}`;
+}
+paintMind();
+mBtn.addEventListener("click", () => { mIdx = (mIdx + 1) % MINDSETS.length; paintMind(); });
+
+/* ── App 簡介視窗 ── */
+const modal = document.getElementById("modal");
+let lastFocused = null;
+
+function openModal(i){
+  const a = APPS[i];
+  document.getElementById("mIcon").innerHTML = a.icon;
+  document.getElementById("mNum").textContent = "0" + (i + 1);
+  document.getElementById("mTitle").textContent = a.name;
+  document.getElementById("mEn").textContent = a.en;
+  document.getElementById("mDetail").textContent = a.detail || a.desc;
+  document.getElementById("mTags").innerHTML =
+    (a.tags || []).map(t => `<span class="tag">${t}</span>`).join("");
+  document.getElementById("mUrl").textContent = a.url.replace(/^https?:\/\//, "");
+  const cta = document.getElementById("mCta");
+  cta.href = a.url;
+  document.getElementById("mCtaLabel").textContent = a.cta;
+
+  lastFocused = document.activeElement;
+  modal.hidden = false;
+  requestAnimationFrame(() => modal.classList.add("show"));
+  document.body.style.overflow = "hidden";
+  cta.focus();
+}
+
+function closeModal(){
+  modal.classList.remove("show");
+  document.body.style.overflow = "";
+  setTimeout(() => {
+    modal.hidden = true;
+    if (lastFocused) lastFocused.focus();
+  }, 240);
+}
+
+grid.addEventListener("click", (e) => {
+  const card = e.target.closest(".card");
+  if (card) openModal(Number(card.dataset.i));
+});
+document.getElementById("mClose").addEventListener("click", closeModal);
+modal.addEventListener("click", (e) => { if (e.target === modal) closeModal(); });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !modal.hidden) closeModal();
+});
+</script>
+
+<!--
+  ───────── 完成 PWA「安裝到桌面」還差兩個檔案（同目錄）─────────
+  1) manifest.json：
+     { "name":"洪啟 The Prime Mover","short_name":"洪啟","start_url":"/",
+       "display":"standalone","background_color":"#0C0E0D","theme_color":"#0C0E0D",
+       "icons":[{"src":"/icon-512.png","sizes":"512x512","type":"image/png"}] }
+     並在 <head> 加： <link rel="manifest" href="/manifest.json">
+  2) sw.js（最小快取）並在本檔加註冊：
+     <script>if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js');</script>
+  單檔無法內嵌 Service Worker，故獨立成檔；其餘（離線標題、主題色）已就緒。
+-->
+</body>
+</html>
