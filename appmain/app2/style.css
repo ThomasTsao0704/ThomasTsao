@@ -1,0 +1,406 @@
+@import url('https://fonts.googleapis.com/css2?family=Manufacturing+Consent&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
+
+.vander-character-sheet {
+  --lvcs-col-bg: #e2d5bb;
+  --lvcs-col-brown: #614e4b;
+  --lvcs-col-medium-brown: #40302e;
+  --lvcs-col-dark-brown: #241f1e;
+  --lvcs-col-purple: #5e4e63;
+  --lvcs-col-offwhite: #f2e9e4;
+  margin: auto;
+  width: 395px;
+  box-sizing: border-box;
+  text-align: justify;
+  line-height: normal;
+  display: flex;
+  justify-content: center;
+  position: relative;
+  font-family: "DM Mono", monospace;
+  color: var(--lvcs-col-dark-brown);
+}
+
+.vander-character-sheet * {
+  box-sizing: border-box;
+  cursor: pointer; /* 修正：點擊是翻面，不是放大 */
+}
+
+.vander-character-sheet *::selection {
+  background: rgba(94, 78, 99, .5);
+}
+
+.lvcs-card {
+  width: 395px;
+  height: 480px;
+  perspective: 1200px; /* 修正：讓翻面有立體感 */
+}
+
+.lvcs-content {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.8s cubic-bezier(0.75, 0, 0.85, 1);
+}
+
+.lvcs-checkbox {
+  display: none;
+}
+
+.lvcs-checkbox:checked + label .lvcs-content {
+  transform: rotateY(-180deg);
+}
+
+.vander-character-sheet label {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transition: 0.3s ease-in-out;
+}
+
+.lvcs-front,
+.lvcs-back {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 15px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform-style: preserve-3d;
+  background-color: var(--lvcs-col-bg);
+  background-image: url("https://www.transparenttextures.com/patterns/blizzard.png");
+}
+
+.lvcs-front:after,
+.lvcs-back:after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: url("https://i.ibb.co/RkxgF2HX/floral-patter-bg-2.png");
+  background-size: 100% 100%;
+  opacity: .08;
+}
+
+.lvcs-main {
+  height: 100%;
+  width: 100%;
+  border: solid 1px var(--lvcs-col-brown);
+  position: relative;
+  z-index: 50;
+  padding: 30px;
+}
+
+.lvcs-main:before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: calc(100% + 16px);
+  height: calc(100% + 16px);
+  background: var(--lvcs-col-brown);
+  clip-path: polygon(0 42px,42px 0,calc(100% - 42px) 0,100% 42px,100% calc(100% - 42px),calc(100% - 42px) 100%,42px 100%,0 calc(100% - 42px),0 42px,1px calc(42px + 0.41px),1px calc(100% - 42px - 0.41px),calc(42px + 0.41px) calc(100% - 1px),calc(100% - 42px - 0.41px) calc(100% - 1px),calc(100% - 1px) calc(100% - 42px - 0.41px),calc(100% - 1px) calc(42px + 0.41px),calc(100% - 42px - 0.41px) 1px,calc(42px + 0.41px) 1px,1px calc(42px + 0.41px));
+  margin: -8px 0 0 -8px;
+}
+
+.lvcs-front {
+  pointer-events: auto;
+}
+
+.lvcs-back {
+  transform: rotateY(180deg);
+  pointer-events: auto;
+}
+
+.lvcs-figure {
+  width: 260px;
+  position: absolute;
+  right: -70px;
+  bottom: -15px;
+  z-index: 50;
+  user-select: none;
+}
+
+.lvcs-beans {
+  width: 115px; /* 換成小貓 */
+  position: absolute;
+  z-index: 45;
+  bottom: -20px;
+  left: -75px;
+  user-select: none;
+}
+
+.vander-character-sheet img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: .2s;
+}
+
+.lvcs-figure img:hover {
+  filter: drop-shadow(9px 3px 0px var(--lvcs-col-purple));
+  transition: .2s;
+}
+
+.lvcs-name {
+  margin: -60px 0 0 -15px;
+  font-family: "Manufacturing Consent", system-ui;
+  font-size: 70px;
+  color: var(--lvcs-col-brown);
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.lvcs-name div {
+  font-size: 120px;
+  color: var(--lvcs-col-purple);
+  margin-top: 28px;
+}
+
+.lvcs-name:after {
+  content: "";
+  position: absolute;
+  height: 3px;
+  width: 185px;
+  background: var(--lvcs-col-purple);
+  margin: 55px 0 0 70px;
+}
+
+.lvcs-name:before {
+  content: "Evander Percival Alderidge";
+  position: absolute;
+  margin: 75px 0 0 0;
+  right: 63px;
+  font-family: "DM Sans", sans-serif;
+  font-size: 10px;
+  text-transform: uppercase;
+  font-style: italic;
+}
+
+/* 修正：改用 <ul>，清除預設內距 */
+.lvcs-infobox {
+  margin: -10px 0 0 10px;
+  padding: 0;
+}
+
+.vander-character-sheet li {
+  list-style: none;
+  width: 200px;
+  margin: 4px 0 4px -10px;
+  font-size: 11px;
+  background: var(--lvcs-col-offwhite);
+  padding: 0 10px 0 0;
+  display: inline-flex; /* 修正：移除重複的 display */
+  align-items: center;
+}
+
+.lvcs-back li {
+  width: 215px;
+}
+
+.vander-character-sheet li span {
+  background: var(--lvcs-col-purple);
+  padding: 3px 15px;
+  margin: 0 10px 0 -10px;
+  --p: 10px;
+  height: 100%;
+  clip-path: polygon(var(--p) 0,100% 0,100% 100%,0 100%);
+  text-transform: uppercase;
+  color: var(--lvcs-col-offwhite);
+  font-size: 9px;
+  letter-spacing: 1.5px;
+}
+
+.lvcs-front li:nth-of-type(3),
+.lvcs-front li:nth-of-type(4) {
+  width: 180px;
+}
+
+.lvcs-back li:nth-of-type(2),
+.lvcs-back li:nth-of-type(3),
+.lvcs-back li:nth-of-type(6) {
+  width: 200px;
+}
+
+.lvcs-back li:nth-of-type(4),
+.lvcs-back li:nth-of-type(5) {
+  width: 175px;
+}
+
+.lvcs-stats,
+.lvcs-stats-2 {
+  width: 220px;
+  margin: 35px 0 0 -10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 19px 29px;
+  user-select: none;
+}
+
+.lvcs-stats-2 {
+  width: 240px;
+  margin: 0 0 30px -5px;
+  gap: 40px;
+  align-items: flex-start;
+}
+
+.lvcs-stats div,
+.lvcs-stats-2 div {
+  width: 45px;
+  height: 45px;
+  background: var(--lvcs-col-offwhite);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: "Manufacturing Consent", system-ui;
+  font-size: 21px;
+  color: var(--lvcs-col-brown);
+  transform: rotate(-45deg);
+  transition: .7s;
+  margin-bottom: 10px;
+  position: relative;
+}
+
+.lvcs-stats-2 div {
+  width: 53px;
+  height: 53px;
+}
+
+.lvcs-stats div p,
+.lvcs-stats-2 div p {
+  transform: rotate(45deg);
+  margin: 0;
+}
+
+.lvcs-stats div:before,
+.lvcs-stats-2 div:before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  --b: 1px;
+  width: 55px;
+  aspect-ratio: 1;
+  --o: calc(50% * tan(-22.5deg));
+  --x: calc(var(--b) * cos(22.5deg));
+  --y: calc(var(--b) * sin(22.5deg));
+  clip-path: polygon(
+    var(--o) 50%, 50% var(--o),
+    calc(100% - var(--o)) 50%,
+    50% calc(100% - var(--o)), var(--o) 50%,
+    calc(50% + var(--o) + var(--y)) var(--x),
+    var(--x) calc(50% + var(--o) + var(--y)),
+    var(--x) calc(50% - var(--o) - var(--y)),
+    calc(50% + var(--o) + var(--y)) calc(100% - var(--x)),
+    calc(50% - var(--o) - var(--y)) calc(100% - var(--x)),
+    calc(100% - var(--x)) calc(50% - var(--o) - var(--y)),
+    calc(100% - var(--x)) calc(50% + var(--o) + var(--y)),
+    calc(50% - var(--o) - var(--y)) var(--x),
+    calc(50% + var(--o) + var(--y)) var(--x)
+  );
+  background: var(--lvcs-col-brown);
+  margin: -5px 0 0 -5px;
+}
+
+.lvcs-stats-2 div:before {
+  width: 64px;
+}
+
+.lvcs-stats div:after,
+.lvcs-stats-2 div:after {
+  content: "STR";
+  position: absolute;
+  font-family: "DM Mono", monospace;
+  font-size: 10px;
+  top: -16px;
+  left: 14px;
+}
+
+.lvcs-stats div:nth-child(2):after { content: "DEX"; }
+.lvcs-stats div:nth-child(3):after { content: "CON"; }
+.lvcs-stats div:nth-child(4):after { content: "INT"; }
+.lvcs-stats div:nth-child(5):after { content: "WIS"; }
+.lvcs-stats div:nth-child(6):after { content: "CHA"; }
+
+.lvcs-stats-2 div:nth-child(1):after { content: "AC"; }
+.lvcs-stats-2 div:nth-child(2):after { content: "INI"; }
+.lvcs-stats-2 div:nth-child(3):after { content: "SPD"; }
+
+.lvcs-stats div:hover,
+.lvcs-stats-2 div:hover {
+  transform: rotate(-45deg) scale(1.05);
+  transition: .7s;
+}
+
+.lvcs-textbox {
+  margin: 20px 0 0 -8px;
+  padding: 10px 0 10px 10px;
+  width: 210px;
+  height: 135px;
+  background: var(--lvcs-col-offwhite);
+  font-size: 11px;
+  line-height: 19px;
+}
+
+.lvcs-textbox i {
+  color: var(--lvcs-col-purple);
+}
+
+.lvcs-textbox b {
+  color: var(--lvcs-col-purple);
+  letter-spacing: .5px;
+}
+
+.lvcs-textbox div {
+  width: 100%;
+  height: 100%;
+  padding-right: 10px;
+  overflow: auto;
+}
+
+.lvcs-textbox div::-webkit-scrollbar {
+  width: 3px;
+}
+
+.lvcs-textbox div::-webkit-scrollbar-thumb {
+  background: var(--lvcs-col-purple);
+}
+
+.lvcs-beans-speech-bubble {
+  position: absolute;
+  background: var(--lvcs-col-purple);
+  left: -110px;
+  bottom: 55px;
+  padding: 2px 12px;
+  display: inline-block;
+  font-size: 12px;
+  color: var(--lvcs-col-offwhite);
+  opacity: 0;
+  transition: .2s;
+  pointer-events: none;
+}
+
+.lvcs-beans-speech-bubble:after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 10px;
+  width: 0;
+  height: 0;
+  border: 13px solid transparent;
+  border-left-color: var(--lvcs-col-purple);
+  border-right: 0;
+  border-top: 0;
+  margin-top: -10px;
+  margin-right: -10px;
+}
+
+.lvcs-beans:hover + .lvcs-beans-speech-bubble {
+  opacity: 1;
+  transition: .2s;
+}
