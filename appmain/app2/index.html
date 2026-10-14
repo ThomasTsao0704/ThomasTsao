@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>個人簡歷卡</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!--
+  ✏️ 修改說明：所有【 】裡的文字都是範例，換成你自己的資料即可。
+  - 名字下方的小字：改 .lvcs-name 的 data-fullname
+  - 菱形能力值的標籤：改每個 <div> 的 data-label，數字改 <p> 裡面
+-->
+
+<div class="vander-character-sheet">
+  <input type="checkbox" id="lvcs-vander" class="lvcs-checkbox">
+  <label for="lvcs-vander">
+    <div class="lvcs-figure">
+      <img src="images/hero.png" alt="個人照片">
+    </div>
+    <div class="lvcs-beans">
+      <img src="images/cat.png" alt="三花小貓">
+    </div>
+    <div class="lvcs-beans-speech-bubble">meow</div>
+
+    <div class="lvcs-card">
+      <div class="lvcs-content">
+
+        <!-- 正面：基本資料 + 能力值 -->
+        <div class="lvcs-front">
+          <div class="lvcs-main">
+            <div class="lvcs-name" data-fullname="Alex Wang · 王小明">
+              <div>A</div>lex
+            </div>
+            <ul class="lvcs-infobox">
+              <li><span>𖥔 職稱</span>【你的職稱】</li>
+              <li><span>𖥔 地區</span>台灣 · 台北</li>
+              <li><span>𖥔 年齡</span>【30】歲</li>
+              <li><span>𖥔 學歷</span>【學校 / 科系】</li>
+              <li><span>𖥔 個性</span>【沉穩 / 細心】</li>
+            </ul>
+            <div class="lvcs-stats">
+              <div data-label="溝通"><p>16</p></div>
+              <div data-label="創意"><p>14</p></div>
+              <div data-label="技術"><p>18</p></div>
+              <div data-label="執行"><p>17</p></div>
+              <div data-label="學習"><p>19</p></div>
+              <div data-label="團隊"><p>15</p></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 背面：經歷 + 自我介紹 -->
+        <div class="lvcs-back">
+          <div class="lvcs-main">
+            <div class="lvcs-stats-2">
+              <div data-label="年資"><p>8年</p></div>
+              <div data-label="專案"><p>30+</p></div>
+              <div data-label="證照"><p>3</p></div>
+            </div>
+            <ul class="lvcs-infobox">
+              <li><span>𖥔 2022–今</span>【公司 · 職位】</li>
+              <li><span>𖥔 2019–22</span>【公司 · 職位】</li>
+              <li><span>𖥔 2017–19</span>【公司 · 職位】</li>
+              <li><span>𖥔 專長</span>【技能一】</li>
+              <li><span>𖥔 專長</span>【技能二】</li>
+              <li><span>𖥔 聯絡</span>【email / IG】</li>
+            </ul>
+            <div class="lvcs-textbox">
+              <div>你好，我是 <b>【名字】</b>！【一句話介紹你在做什麼】。過去 <b>【8】</b> 年在 <i>【產業 / 領域】</i> 累積了【主要經驗】，擅長【你的強項】。工作之外喜歡【興趣】，家裡還有一隻三花貓 <b>【貓咪名字】</b> 負責監工。期待和你一起合作！</div>
+            </div>
+          </div>
+        </div>
+
+      </div> <!-- .lvcs-content -->
+    </div>   <!-- .lvcs-card -->
+  </label>
+</div>       <!-- .vander-character-sheet -->
+
+</body>
+</html>
