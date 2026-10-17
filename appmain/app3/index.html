@@ -1,1652 +1,839 @@
-<!DOCTYPE html>
-<html lang="zh-Hant">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ocean — Six Scenes</title>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>夜聲 Sleepscape</title>
+<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;700&family=Space+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;500&family=Noto+Sans+TC:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-*,
-*::before,
-*::after {
-	box-sizing: border-box;
-	margin: 0;
-	padding: 0;
+/* Layout: night-sky transport band on top, scene strip, then mixer (wide) beside a narrow column of sleep controls. */
+:root{
+  --bg:#0c111d; --surface:#131a2a; --surface-2:#18213411; --line:#26304a; --fg:#dde2ec; --muted:#8a94ab;
+  --accent:#e4b878; --accent-ink:#1a1408; --tide:#7ea2c8; --sky-top:#070a13; --sky-bottom:#121a2e; --star:#c9d4ea;
+  --f-display:"Noto Serif TC","Songti TC","PMingLiU",serif;
+  --f-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --f-data:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  color-scheme:dark;
 }
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --bg:#eef1f5; --surface:#ffffff; --surface-2:#e4e9f1; --line:#d3dae6; --fg:#1a2132; --muted:#5b6578;
+    --accent:#a5611c; --accent-ink:#fff8ef; --tide:#3b6894; --sky-top:#1b2540; --sky-bottom:#33456c; --star:#e8eefb;
+    color-scheme:light;
+  }
+}
+:root[data-theme="light"]{
+  --bg:#eef1f5; --surface:#ffffff; --surface-2:#e4e9f1; --line:#d3dae6; --fg:#1a2132; --muted:#5b6578;
+  --accent:#a5611c; --accent-ink:#fff8ef; --tide:#3b6894; --sky-top:#1b2540; --sky-bottom:#33456c; --star:#e8eefb;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.6}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
-:root {
-	/* Set by JS per scene — defaults to dawn */
-	--fg: #f0cfa0;
-	--fg-dim: rgba(240, 207, 160, 0.55);
-	--fg-hud: rgba(240, 207, 160, 0.7);
-	--fg-dot: rgba(240, 207, 160, 0.3);
-	--fg-dotact: rgba(240, 207, 160, 0.9);
-	--bg: #0a0a0f;
-	--accent: #a0b4ff;
-	--scrim: 0.18;
-}
+/* ---------- sky / transport ---------- */
+.sky{position:relative;background:linear-gradient(180deg,var(--sky-top),var(--sky-bottom));color:#e6ebf5;overflow:hidden}
+.sky canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.sky-inner{position:relative;max-width:1120px;margin:0 auto;padding-block:28px 34px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:grid;grid-template-columns:1fr auto;gap:24px 32px;align-items:end}
+.brand h1{font-family:var(--f-display);font-weight:300;font-size:clamp(30px,5vw,44px);letter-spacing:.08em;margin:0;line-height:1.2;text-wrap:balance}
+.brand p{margin:6px 0 0;color:#a9b4cc;font-size:14px;max-width:34em}
+.transport{display:flex;align-items:center;gap:18px;flex-wrap:wrap;justify-content:flex-end}
+.playbtn{width:76px;height:76px;border-radius:50%;border:1.5px solid #e4b878;background:rgba(228,184,120,.08);cursor:pointer;display:grid;place-items:center;transition:background .3s,transform .2s}
+.playbtn:hover{background:rgba(228,184,120,.18)}
+.playbtn:active{transform:scale(.97)}
+.playbtn svg{width:26px;height:26px;fill:#e4b878}
+.stopbtn{border:1px solid rgba(230,235,245,.28);background:transparent;color:#d5dcea;border-radius:999px;padding:6px 14px;cursor:pointer;font-size:13px}
+.stopbtn:disabled{opacity:.35;cursor:default}
+.readout{display:grid;gap:4px;min-width:190px}
+.status{font-size:12px;letter-spacing:.12em;color:#e4b878}
+.clock{font-family:var(--f-data);font-size:22px;font-variant-numeric:tabular-nums;color:#eef2f8}
+.clock small{font-size:13px;color:#93a0ba}
+.master{display:flex;align-items:center;gap:10px;font-size:13px;color:#b7c1d6}
+.master output{font-family:var(--f-data);width:3.2em;text-align:right;font-variant-numeric:tabular-nums}
+.master input{width:130px;--track:rgba(230,235,245,.22);--fill:#e4b878}
 
-html {
-	scroll-behavior: auto;
-}
+/* ---------- main ---------- */
+main{max-width:1120px;margin:0 auto;padding-block:28px 48px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:grid;gap:32px}
+h2{font-family:var(--f-display);font-weight:500;font-size:19px;letter-spacing:.06em;margin:0}
+.sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.hint{color:var(--muted);font-size:13px}
 
-body {
-	background: var(--bg);
-	color: var(--fg);
-	font-family: "Space Grotesk", sans-serif;
-	overflow-x: hidden;
-	cursor: crosshair;
-}
+.scenes{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.scene{text-align:left;border:1px solid var(--line);background:transparent;border-radius:10px;padding:14px 14px 12px;cursor:pointer;display:grid;gap:6px;transition:border-color .25s,background .25s}
+.scene:hover{border-color:var(--muted)}
+.scene[aria-pressed="true"]{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 9%,transparent)}
+.scene b{font-family:var(--f-display);font-weight:500;font-size:17px;letter-spacing:.04em}
+.scene span{color:var(--muted);font-size:12.5px;line-height:1.5}
+.scene i{font-style:normal;font-family:var(--f-data);font-size:11px;color:var(--tide);letter-spacing:.06em}
 
-/* ── Fixed canvas ─────────────────────────────────────── */
-#webgl_canvas {
-	position: fixed;
-	inset: 0;
-	width: 100%;
-	height: 100%;
-	z-index: 0;
-	display: block;
-}
+.work{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:32px;align-items:start}
 
-/* ── HUD ──────────────────────────────────────────────── */
-#hud {
-	position: fixed;
-	inset: 0;
-	z-index: 10;
-	pointer-events: none;
-	display: flex;
-	flex-direction: column;
-	justify-content: space-between;
-	padding: 1.5rem 2rem;
-}
+/* mixer */
+.layers{display:grid;gap:0;border-top:1px solid var(--line)}
+.layer{padding:16px 0;border-bottom:1px solid var(--line);display:grid;gap:12px}
+.lhead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.lname{font-family:var(--f-display);font-weight:500;font-size:17px}
+.ldesc{color:var(--muted);font-size:12.5px;flex:1;min-width:8em}
+.lbtns{display:flex;gap:6px}
+.chip{border:1px solid var(--line);background:transparent;border-radius:999px;padding:2px 10px;font-size:12px;cursor:pointer;color:var(--muted)}
+.chip:hover{color:var(--fg);border-color:var(--muted)}
+.chip[aria-pressed="true"]{color:var(--accent-ink);background:var(--accent);border-color:var(--accent)}
+.layer.silent .params{opacity:.45}
+.params{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px 16px}
+.param{display:grid;gap:4px;font-size:12px;color:var(--muted)}
+.param .top{display:flex;justify-content:space-between;gap:6px}
+.param output{font-family:var(--f-data);color:var(--fg);font-variant-numeric:tabular-nums;font-size:11.5px}
+.addrow{display:flex;gap:10px;align-items:center;margin-top:14px;flex-wrap:wrap}
+.addrow select{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+.reset{margin-left:auto}
 
-#hud-top {
-	display: flex;
-	justify-content: space-between;
-	align-items: flex-start;
-}
+/* range */
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:18px;background:transparent;cursor:pointer;margin:0;
+  --a:0%;--b:50%;--track:var(--line);--fill:var(--tide)}
+input[type=range]::-webkit-slider-runnable-track{height:3px;border-radius:2px;
+  background:linear-gradient(90deg,var(--track) var(--a),var(--fill) var(--a),var(--fill) var(--b),var(--track) var(--b))}
+input[type=range]::-moz-range-track{height:3px;border-radius:2px;
+  background:linear-gradient(90deg,var(--track) var(--a),var(--fill) var(--a),var(--fill) var(--b),var(--track) var(--b))}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--bg);border:2px solid var(--fill);margin-top:-5.5px}
+input[type=range]::-moz-range-thumb{width:11px;height:11px;border-radius:50%;background:var(--bg);border:2px solid var(--fill)}
 
-#hud-bottom {
-	display: flex;
-	justify-content: space-between;
-	align-items: flex-end;
-}
+/* side column */
+.side{display:grid;gap:14px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;gap:12px}
+.panel h3{margin:0;font-size:14px;font-weight:500;letter-spacing:.08em}
+.label{font-size:12px;color:var(--muted);letter-spacing:.04em}
+.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{flex:1;border:0;background:transparent;padding:6px 4px;font-size:13px;cursor:pointer;color:var(--muted);font-variant-numeric:tabular-nums}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.seg button:disabled{opacity:.4;cursor:default}
+.toggle{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:14px}
+.switch{width:40px;height:22px;border-radius:999px;border:1px solid var(--line);background:var(--surface-2);position:relative;cursor:pointer;flex:none}
+.switch::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--muted);transition:transform .2s,background .2s}
+.switch[aria-checked="true"]{background:color-mix(in srgb,var(--accent) 25%,transparent);border-color:var(--accent)}
+.switch[aria-checked="true"]::after{transform:translateX(18px);background:var(--accent)}
+.curve{width:100%;height:auto;display:block}
+.summary{font-size:13px;color:var(--muted);margin:0}
+.summary b{color:var(--fg);font-weight:500}
+.varrow{display:flex;align-items:center;gap:10px}
+.varrow output{font-family:var(--f-data);font-size:12px;width:3em;text-align:right}
 
-.mono {
-	font-family: "Space Mono", monospace;
-}
+footer{max-width:1120px;margin:0 auto;padding-block:0 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));color:var(--muted);font-size:12.5px}
+footer p{max-width:62em;margin:0;border-top:1px solid var(--line);padding-top:16px}
 
-#scene_name {
-	font-family: "Space Mono", monospace;
-	font-size: clamp(0.65rem, 1.5vw, 0.78rem);
-	letter-spacing: 0.25em;
-	text-transform: uppercase;
-	color: var(--fg-hud);
-	text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6);
-	transition: color 1.2s ease;
+@media (max-width:900px){
+  .work{grid-template-columns:minmax(0,1fr)}
+  .scenes{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
-
-#hud_pct {
-	font-family: "Space Mono", monospace;
-	font-size: clamp(0.65rem, 1.5vw, 0.78rem);
-	letter-spacing: 0.12em;
-	color: var(--fg-hud);
-	opacity: 0.65;
-	text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6);
-	transition: color 1.2s ease;
+@media (max-width:620px){
+  .sky-inner{grid-template-columns:1fr}
+  .transport{justify-content:flex-start}
+  .scenes{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .params{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
-
-#prog_bar {
-	width: 120px;
-	height: 2px;
-	background: rgba(255, 255, 255, 0.15);
-	position: relative;
-	overflow: hidden;
-	border-radius: 2px;
-}
-#prog_fill {
-	position: absolute;
-	left: 0;
-	top: 0;
-	bottom: 0;
-	background: var(--fg-hud);
-	opacity: 0.7;
-	width: 0%;
-	transition: width 80ms linear, background 1.2s ease;
-}
-
-/* Scene dots */
-#scene_dots {
-	display: flex;
-	flex-direction: column;
-	gap: 0.5rem;
-	position: fixed;
-	right: 1.75rem;
-	top: 50%;
-	transform: translateY(-50%);
-	z-index: 10;
-	pointer-events: none;
-}
-
-.scene-dot {
-	width: 6px;
-	height: 6px;
-	border-radius: 50%;
-	background: var(--fg-dot);
-	transition: background 0.4s, transform 0.3s;
-}
-
-.scene-dot.active {
-	background: var(--fg-dotact);
-	transform: scale(1.5);
-}
-
-/* ── Scrollable content ───────────────────────────────── */
-#scroll_track {
-	position: relative;
-	z-index: 5;
-	pointer-events: none;
-}
-
-.scene-section {
-	height: 100vh;
-	display: flex;
-	flex-direction: column;
-	justify-content: flex-end;
-	padding: 0 2.5rem 4.5rem;
-	pointer-events: none;
-	position: relative;
-}
-
-/* Bottom scrim — gets more opaque as night approaches (value set by JS every frame) */
-.scene-section::after {
-	content: "";
-	position: absolute;
-	inset: 0;
-	background: linear-gradient(
-		to top,
-		rgba(0, 0, 8, var(--scrim, 0.18)) 0%,
-		rgba(0, 0, 8, calc(var(--scrim, 0.18) * 0.4)) 40%,
-		transparent 70%
-	);
-	pointer-events: none;
-	z-index: 0;
-}
-
-.scene-section > * {
-	position: relative;
-	z-index: 1;
-}
-
-.scene-title {
-	font-family: "Space Grotesk", sans-serif;
-	font-weight: 700;
-	font-size: clamp(2.8rem, 8vw, 6.5rem);
-	line-height: 0.95;
-	color: var(--fg);
-	text-shadow: 0 2px 40px rgba(0, 0, 0, 0.7), 0 1px 4px rgba(0, 0, 0, 0.9);
-	letter-spacing: -0.02em;
-	opacity: 0;
-	transform: translateY(18px);
-	transition: opacity 0.7s ease, transform 0.7s ease, color 1.2s ease;
-}
-
-.scene-title.visible {
-	opacity: 1;
-	transform: none;
-}
-
-.scene-desc {
-	font-family: "Space Grotesk", sans-serif;
-	font-weight: 300;
-	font-size: clamp(0.88rem, 2vw, 1.1rem);
-	color: var(--fg);
-	opacity: 0;
-	max-width: 420px;
-	margin-top: 0.75rem;
-	line-height: 1.55;
-	text-shadow: 0 1px 16px rgba(0, 0, 0, 0.85), 0 0px 4px rgba(0, 0, 0, 0.7);
-	transform: translateY(10px);
-	transition: opacity 0.7s ease 0.12s, transform 0.7s ease 0.12s, color 1.2s ease;
-}
-
-.scene-desc.visible {
-	opacity: 0.88;
-	transform: none;
-}
-
-/* h-line decorative */
-.h-line {
-	width: 36px;
-	height: 1px;
-	background: var(--fg);
-	opacity: 0;
-	margin-bottom: 1rem;
-	transition: opacity 0.6s ease 0.05s, background 1.2s ease;
-}
-
-.h-line.visible {
-	opacity: 0.4;
-	width: 36px;
-}
-
-.scene-label {
-	font-family: "Space Mono", monospace;
-	font-size: clamp(0.58rem, 1.2vw, 0.72rem);
-	letter-spacing: 0.3em;
-	text-transform: uppercase;
-	color: var(--fg);
-	opacity: 0.45;
-	margin-bottom: 0.5rem;
-	transition: color 1.2s ease;
-}
-
-/* ── Sound toggle ─────────────────────────────────────── */
-#sound_btn {
-	pointer-events: auto;
-	margin-left: auto;
-	display: flex;
-	align-items: center;
-	gap: 0.6rem;
-	background: rgba(0, 0, 8, 0.18);
-	backdrop-filter: blur(4px);
-	-webkit-backdrop-filter: blur(4px);
-	border: 1px solid var(--fg-dot);
-	border-radius: 999px;
-	color: var(--fg-hud);
-	font-family: "Space Mono", monospace;
-	font-size: clamp(0.6rem, 1.3vw, 0.72rem);
-	letter-spacing: 0.2em;
-	text-transform: uppercase;
-	padding: 0.5rem 0.9rem;
-	cursor: pointer;
-	transition: border-color 0.3s, color 1.2s ease;
-}
-#sound_btn:hover,
-#sound_btn:focus-visible {
-	border-color: var(--fg-hud);
-	outline: none;
-}
-#sound_btn .bars {
-	display: flex;
-	align-items: flex-end;
-	gap: 2px;
-	height: 10px;
-}
-#sound_btn .bars i {
-	display: block;
-	width: 2px;
-	height: 30%;
-	background: currentColor;
-	border-radius: 1px;
-}
-#sound_btn.on .bars i {
-	animation: eq 1.4s ease-in-out infinite;
-}
-#sound_btn.on .bars i:nth-child(2) { animation-delay: -0.45s; }
-#sound_btn.on .bars i:nth-child(3) { animation-delay: -0.9s; }
-@keyframes eq {
-	0%, 100% { height: 30%; }
-	50% { height: 100%; }
-}
-@media (prefers-reduced-motion: reduce) {
-	#sound_btn.on .bars i { animation: none; height: 70%; }
-}
-
-@media (max-width: 600px) {
-	#hud { padding: 1rem 1rem; }
-	.scene-section { padding: 0 1rem 3.5rem; }
-	#scene_dots { right: 1rem; }
-}
+@media (prefers-reduced-motion: reduce){ *{transition:none!important} }
 </style>
-</head>
-<body>
 
-<canvas id="webgl_canvas"></canvas>
+<header class="sky">
+  <canvas id="sky" aria-hidden="true"></canvas>
+  <div class="sky-inner">
+    <div class="brand">
+      <h1>夜聲</h1>
+      <p>即時合成的助眠聲景：每個聲音都由瀏覽器當下生成，不使用錄音循環，所以不會聽到重複的接縫。</p>
+    </div>
+    <div class="transport">
+      <div class="readout">
+        <span class="status" id="status">未播放</span>
+        <span class="clock" id="clock">00:00 <small>/ 30:00</small></span>
+        <label class="master" for="master">總音量
+          <input type="range" id="master" min="0" max="100" value="40">
+          <output id="masterOut">40%</output>
+        </label>
+      </div>
+      <div style="display:grid;gap:8px;justify-items:center">
+        <button class="playbtn" id="play" aria-label="播放"><svg viewBox="0 0 24 24" id="playIcon"><path d="M7 4.5v15l12.5-7.5z"/></svg></button>
+        <button class="stopbtn" id="stop" disabled>平滑停止</button>
+      </div>
+    </div>
+  </div>
+</header>
 
-<!-- HUD -->
-<div id="hud">
-	<div id="hud-top">
-		<div>
-			<div id="scene_name" class="mono">DAWN</div>
-		</div>
-		<div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.4rem;">
-			<div id="hud_pct" class="mono">000%</div>
-			<div id="prog_bar">
-				<div id="prog_fill"></div>
-			</div>
-		</div>
-	</div>
-	<div id="hud-bottom">
-		<button id="sound_btn" type="button" aria-pressed="false" title="Toggle sound (M)">
-			<span class="bars"><i></i><i></i><i></i></span>
-			<span id="sound_label">Sound off</span>
-		</button>
-	</div>
-</div>
+<main>
+  <section>
+    <div class="sec-head"><h2>聲音場景</h2><span class="hint">播放中切換會以 3 秒交叉淡化，不會突然換聲</span></div>
+    <div class="scenes" id="scenes"></div>
+  </section>
 
-<!-- Scene nav dots -->
-<div id="scene_dots">
-	<div class="scene-dot active"></div>
-	<div class="scene-dot"></div>
-	<div class="scene-dot"></div>
-	<div class="scene-dot"></div>
-	<div class="scene-dot"></div>
-	<div class="scene-dot"></div>
-</div>
+  <div class="work">
+    <section>
+      <div class="sec-head"><h2>音色混音器</h2><span class="hint">低頻 / 高頻為 ±12 dB 搁架等化；空間 0% 為正中央單點</span></div>
+      <div class="layers" id="layers"></div>
+      <div class="addrow">
+        <label class="hint" for="addLayer">加入聲音</label>
+        <select id="addLayer"></select>
+        <button class="chip reset" id="resetScene">還原此場景預設</button>
+      </div>
+    </section>
 
-<!-- Scroll track -->
-<div id="scroll_track">
-	<div class="scene-section" id="s0">
-		<div class="h-line"></div>
-		<div class="scene-label">Scene 01 / 06</div>
-		<div class="scene-title">DAWN</div>
-		<div class="scene-desc">Gold floods the horizon. The ocean catches fire — warm amber and peach across every swell.</div>
-	</div>
-	<div class="scene-section" id="s1">
-		<div class="h-line"></div>
-		<div class="scene-label">Scene 02 / 06</div>
-		<div class="scene-title">MIDDAY</div>
-		<div class="scene-desc">Full light. The sea turns a bright turquoise, scattering white specular across every swell.</div>
-	</div>
-	<div class="scene-section" id="s2">
-		<div class="h-line"></div>
-		<div class="scene-label">Scene 03 / 06</div>
-		<div class="scene-title">DUSK</div>
-		<div class="scene-desc">The sun descends in copper and ember. Long reflections stretch across the darkening water.</div>
-	</div>
-	<div class="scene-section" id="s3">
-		<div class="h-line"></div>
-		<div class="scene-label">Scene 04 / 06</div>
-		<div class="scene-title">STORM</div>
-		<div class="scene-desc">Waves amplify. The sky thickens. A darkness that isn't night — something coming from the west.</div>
-	</div>
-	<div class="scene-section" id="s4">
-		<div class="h-line"></div>
-		<div class="scene-label">Scene 05 / 06</div>
-		<div class="scene-title">NIGHT</div>
-		<div class="scene-desc">Stars emerge. The moon leaves a silver path on the swells. Nothing moves but the ocean.</div>
-	</div>
-	<div class="scene-section" id="s5">
-		<div class="h-line"></div>
-		<div class="scene-label">Scene 06 / 06</div>
-		<div class="scene-title">PRE-DAWN</div>
-		<div class="scene-desc">The last stars hold. A red-orange ember glows at the edge of the world, not yet a sun.</div>
-	</div>
-</div>
+    <aside class="side">
+      <div class="panel">
+        <h3>睡眠計時</h3>
+        <div class="label">播放長度</div>
+        <div class="seg" id="lengthSeg"></div>
+        <div class="toggle"><span>入睡漸弱</span><button class="switch" id="fadeSwitch" role="switch" aria-checked="true" aria-label="入睡漸弱"></button></div>
+        <div class="label">淡出時間</div>
+        <div class="seg" id="durSeg"></div>
+        <svg class="curve" id="curve" viewBox="0 0 300 92" role="img" aria-label="本次播放的音量曲線"></svg>
+        <p class="summary" id="summary"></p>
+      </div>
+
+      <div class="panel">
+        <h3>自然變化</h3>
+        <div class="varrow">
+          <input type="range" id="variation" min="0" max="100" value="55" aria-label="變化程度">
+          <output id="varOut">55%</output>
+        </div>
+        <p class="summary">控制雨勢、風勢、浪的週期與火焰劈啪的隨機幅度。變化只會往你設定的音量以下浮動，不會突然變大聲。</p>
+      </div>
+
+      <div class="panel">
+        <h3>輸出裝置</h3>
+        <div class="seg" id="outSeg"></div>
+        <p class="summary" id="outNote"></p>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<footer>
+  <p>目前研究無法證明白噪音、粉紅噪音或環境音對每個人都有助眠效果，也有研究發現整夜的連續噪音可能干擾睡眠。預設採用低音量與入睡漸弱；建議先用幾晚比較不同場景，選擇讓你最放鬆、而不是最大聲的組合。所有設定只儲存在這台裝置的瀏覽器中。</p>
+</footer>
 
 <script>
-// ── WebGL setup ──────────────────────────────────────────────────────────────
-const canvas = document.getElementById("webgl_canvas");
-const gl = canvas.getContext("webgl", {
-	alpha: false,
-	antialias: false,
-	depth: false,
-	stencil: false,
-	preserveDrawingBuffer: false,
-	powerPreference: "high-performance"
-});
-
-if (!gl) {
-	canvas.style.background = "#0a0a0f";
-	throw new Error("WebGL not supported");
-}
-
-// ── Shaders ──────────────────────────────────────────────────────────────────
-const VS = `
-attribute vec2 a;
-void main() { gl_Position = vec4(a, 0.0, 1.0); }
-`;
-
-const FS = `
-precision highp float;
-
-uniform vec2  uR;
-uniform float uT, uS, uSc, uBl;
-uniform float uLtF;   // lightning flash envelope (computed in JS so thunder audio stays in sync)
-uniform float uLtS;   // lightning slot id (seeds bolt shape)
-
-// ═══════════════════════════════════════════════════════════════════
-// CONSTANTS
-// ═══════════════════════════════════════════════════════════════════
-
-// ── Math ────────────────────────────────────────────────────────────
-const float PI  = 3.14159265359;
-const float TAU = 6.28318530718;
-
-// ── Render budget ───────────────────────────────────────────────────
-const int SEA_TRACE_STEPS  = 8;
-const int SEA_OCTAVES_GEO  = 3;
-const int SEA_OCTAVES_FRAG = 5;
-
-// ── Hash / noise ────────────────────────────────────────────────────
-const vec2  HASH_DOT   = vec2(127.1, 311.7);
-const float HASH_SCALE = 43758.5453123;
-
-// ── Sea octave ──────────────────────────────────────────────────────
-const mat2  SEA_OCT_M        = mat2(1.6, 1.2, -1.2, 1.6);
-const float SEA_OCT_POWER    = 0.65;
-const float SEA_UV_X_SCALE   = 0.75;
-const float SEA_FREQ_BASE    = 0.16;
-const float SEA_FREQ_MUL     = 1.9;
-const float SEA_AMP_MUL      = 0.22;
-const float SEA_CHOPPY_BLEND = 0.20;
-const float SEA_TRACE_FAR    = 1000.0;
-
-// ── Scene indices (match NAMES order in JS) ─────────────────────────
-const float SC_DAWN    = 0.0;
-const float SC_MIDDAY  = 1.0;
-const float SC_DUSK    = 2.0;
-const float SC_STORM   = 3.0;
-const float SC_NIGHT   = 4.0;
-const float SC_PREDAWN = 5.0;
-
-// ── Camera ──────────────────────────────────────────────────────────
-const float CAM_HEIGHT_START = 5.2;
-const float CAM_HEIGHT_END   = 4.4;
-const float CAM_DRIFT_SPEED  = 0.5;
-const float CAM_PITCH        = 0.20;
-const float CAM_FOCAL        = -1.8;
-const float CAM_BARREL       = 0.10;
-
-// ── Sky gradient ────────────────────────────────────────────────────
-const float SKY_GRAD_EXP = 0.42;
-
-// ── Clouds ──────────────────────────────────────────────────────────
-const float CLOUD_FREQ_A    = 5.5;
-const float CLOUD_FREQ_B    = 8.0;
-const float CLOUD_TIME_A    = 0.012;
-const float CLOUD_TIME_B    = 0.008;
-const float CLOUD_THRESH_LO = 0.62;
-const float CLOUD_THRESH_HI = 0.86;
-const float CLOUD_BLEND_A   = 0.65;
-const float CLOUD_BLEND_B   = 0.35;
-const float CLOUD_HOR_LO    = -0.02;
-const float CLOUD_HOR_HI    = 0.24;
-const float CLOUD_AMT_BASE  = 0.06;
-const float CLOUD_AMT_STORM = 0.22;
-const float CLOUD_DARKEN    = 0.97;
-const float CLOUD_MIX       = 0.35;
-const vec3  CLOUD_COL_CLEAR = vec3(1.00, 0.82, 0.65);
-const vec3  CLOUD_COL_STORM = vec3(0.42, 0.48, 0.56);
-
-// ── Sun ─────────────────────────────────────────────────────────────
-const float SUN_ARC_X        = -0.75; // dawn side (left); sets on the right
-const float SUN_ARC_Y_SCALE  = 0.38;
-const float SUN_SET_DIP      = 0.15;  // how far the sun sinks below horizon after dusk
-const float SUN_PREDAWN_Y    = -0.03; // just below the horizon → ember glow, no disk
-const float SUN_GLOW_LO      = -0.10;
-const float SUN_GLOW_HI      = 0.06;
-const float SUN_HALO_EXP_A   = 380.0;
-const float SUN_HALO_SCL_A   = 6.8;
-const float SUN_HALO_EXP_B   = 22.0;
-const float SUN_HALO_SCL_B   = 0.22;
-const float SUN_HALO_EXP_C   = 5.0;
-const float SUN_HALO_SCL_C   = 0.09;
-const float SUN_HALO_EXP_D   = 3.0;
-const float SUN_HALO_SCL_D   = 0.035;
-const float SUN_DISK_LO      = 0.99975;
-const float SUN_DISK_HI      = 0.99998;
-const float SUN_DISK_SCL     = 1.8;
-const float SUN_HORIZON_FALL = 24.0;
-const float SUN_HORIZON_SCL  = 0.11;
-
-// ── Moon ────────────────────────────────────────────────────────────
-const vec3  MOON_DIR_RAW     = vec3(-0.14, 0.42, -1.0);
-const float MOON_THRESHOLD   = 0.04;
-const float MOON_DISK_LO     = 0.99985;
-const float MOON_DISK_HI     = 0.99998;
-const float MOON_DISK_SCL    = 3.5;
-const vec3  MOON_COL_DISK    = vec3(0.95, 0.97, 1.00);
-const vec3  MOON_COL_CORONA  = vec3(0.88, 0.92, 1.00);
-const float MOON_CORONA_EXP  = 820.0; const float MOON_CORONA_SCL  = 5.0;
-const vec3  MOON_COL_HALO1   = vec3(0.65, 0.75, 0.95);
-const float MOON_HALO1_EXP   = 60.0;  const float MOON_HALO1_SCL   = 0.18;
-const vec3  MOON_COL_HALO2   = vec3(0.40, 0.52, 0.82);
-const float MOON_HALO2_EXP   = 12.0;  const float MOON_HALO2_SCL   = 0.07;
-
-// ── Stars ───────────────────────────────────────────────────────────
-const float STAR_HOR_LO     = 0.02;
-const float STAR_HOR_HI     = 0.28;
-const float STAR_STORM_SUPP = 0.88;
-const float STAR_NIGHT_SCL  = 2.80;
-const float NIGHT_STARS_THRESHOLD = 0.02;
-
-// ── Horizon mist ────────────────────────────────────────────────────
-const float HZ_MIST_CLEAR     = 38.0;
-const float HZ_MIST_STORM     = 22.0;
-const float HZ_MIST_SCL       = 0.09;
-const float HZ_MIST_STORM_ADD = 0.10;
-
-// ── Storm sky tint ──────────────────────────────────────────────────
-const vec3  STORM_SKY_TINT     = vec3(0.91, 0.94, 0.98);
-const float STORM_SKY_TINT_AMT = 0.22;
-
-// ── Lightning ────────────────────────────────────────────────────────
-const float LT_RATE          = 0.28;
-const float LT_PROB          = 0.30;
-const float LT_DECAY         = 9.0;
-const float LT_BOLT_ELEV_MIN = 0.015;
-const float LT_BOLT_ELEV_MAX = 0.82;
-const vec3  LT_COL_SHEET     = vec3(0.76, 0.86, 1.00);
-const vec3  LT_COL_BOLT      = vec3(0.96, 0.97, 1.00);
-const float LT_SHEET_BRIGHT  = 2.2;
-const float LT_WATER_BRIGHT  = 0.55;
-
-// ── Sea surface rendering ───────────────────────────────────────────
-const float SEA_HORIZON_BLEND  = -0.05;
-const float SEA_HORIZON_EXP    = 0.30;
-const float SEA_MIX_THRESHOLD  = 0.001;
-const float SEA_NORMAL_EPS_K   = 0.10;
-const float FRESNEL_EXP        = 3.0;
-const float FRESNEL_SCL        = 0.65;
-const float REFL_SUN_EXP_A     = 140.0; const float REFL_SUN_SCL_A = 3.0;
-const float REFL_SUN_EXP_B     = 18.0;  const float REFL_SUN_SCL_B = 0.10;
-const vec3  REFL_MOON_COL_A = vec3(0.90, 0.94, 1.00);
-const float REFL_MOON_EXP_A = 320.0;   const float REFL_MOON_SCL_A = 2.40;
-const vec3  REFL_MOON_COL_B = vec3(0.72, 0.82, 0.98);
-const float REFL_MOON_EXP_B = 28.0;    const float REFL_MOON_SCL_B = 0.42;
-const vec3  REFL_MOON_COL_C = vec3(0.50, 0.62, 0.88);
-const float REFL_MOON_EXP_C = 6.0;     const float REFL_MOON_SCL_C = 0.12;
-const float DIFF_WRAP        = 0.4;
-const float DIFF_LIFT        = 0.6;
-const float DIFF_EXP         = 80.0;
-const float DIFF_WATER_SCL   = 0.12;
-const float SSS_ATTEN_K   = 0.001;
-const float SSS_SCL       = 0.18;
-const float SPEC_EXP      = 60.0;
-const float GLITTER_UV_SCL    = 18.0;
-const float GLITTER_TIME_U    = 0.55;
-const float GLITTER_TIME_V    = 0.22;
-const float GLITTER_THRESH    = 0.94;
-const float GLITTER_SCL       = 0.09;
-const vec3  MSPEC_COL_A   = vec3(0.88, 0.93, 1.00);
-const float MSPEC_EXP_A   = 380.0; const float MSPEC_SCL_A = 0.55;
-const vec3  MSPEC_COL_B   = vec3(0.70, 0.80, 0.97);
-const float MSPEC_EXP_B   = 22.0;  const float MSPEC_SCL_B = 0.14;
-const float FOG_SCALE = 1.6;
-
-// ── Post-processing ─────────────────────────────────────────────────
-const float HOR_EDGE_LO    = -0.008;
-const float HOR_EDGE_HI    = 0.018;
-const float HOR_BLEND      = 0.25;
-const float GRAIN_UV_SCL   = 0.5;
-const float GRAIN_TIME_SCL = 12.0;
-const float GRAIN_STR      = 0.003;
-const float GAMMA          = 0.78;
-
-// ═══════════════════════════════════════════════════════════════════
-// SCENE PALETTES  (predawn / dawn / midday / dusk / storm / night)
-// ═══════════════════════════════════════════════════════════════════
-const vec3 SKY_TOP_PREDAWN  = vec3(0.38, 0.40, 0.64);
-const vec3 SKY_TOP_DAWN     = vec3(0.42, 0.60, 0.90);
-const vec3 SKY_TOP_DAY      = vec3(0.04, 0.22, 0.62);
-const vec3 SKY_TOP_DUSK     = vec3(0.14, 0.04, 0.26);
-const vec3 SKY_TOP_STORM    = vec3(0.04, 0.05, 0.09);
-const vec3 SKY_TOP_NIGHT    = vec3(0.01, 0.01, 0.05);
-
-const vec3 SKY_HOR_PREDAWN  = vec3(0.70, 0.52, 0.64);
-const vec3 SKY_HOR_DAWN     = vec3(0.98, 0.50, 0.12);
-const vec3 SKY_HOR_DAY      = vec3(0.50, 0.68, 0.92);
-const vec3 SKY_HOR_DUSK     = vec3(0.98, 0.22, 0.02);
-const vec3 SKY_HOR_STORM    = vec3(0.15, 0.17, 0.23);
-const vec3 SKY_HOR_NIGHT    = vec3(0.02, 0.02, 0.06);
-
-const vec3 SUN_COL_PREDAWN  = vec3(0.90, 0.55, 0.62);
-const vec3 SUN_COL_DAWN     = vec3(1.00, 0.88, 0.35);
-const vec3 SUN_COL_DAY      = vec3(1.00, 0.96, 0.80);
-const vec3 SUN_COL_DUSK     = vec3(1.00, 0.28, 0.04);
-const vec3 SUN_COL_STORM    = vec3(0.26, 0.28, 0.34);
-const vec3 SUN_COL_NIGHT    = vec3(0.72, 0.78, 0.98);
-
-const vec3 SEA_BASE_PREDAWN = vec3(0.02, 0.02, 0.06);
-const vec3 SEA_BASE_DAWN    = vec3(0.08, 0.04, 0.02);
-const vec3 SEA_BASE_DAY     = vec3(0.02, 0.10, 0.26);
-const vec3 SEA_BASE_DUSK    = vec3(0.09, 0.05, 0.03);
-const vec3 SEA_BASE_STORM   = vec3(0.03, 0.04, 0.06);
-const vec3 SEA_BASE_NIGHT   = vec3(0.01, 0.01, 0.04);
-
-const vec3 SEA_WATER_PREDAWN = vec3(0.25, 0.28, 0.54);
-const vec3 SEA_WATER_DAWN    = vec3(0.82, 0.55, 0.32);
-const vec3 SEA_WATER_DAY     = vec3(0.42, 0.82, 0.88);
-const vec3 SEA_WATER_DUSK    = vec3(0.32, 0.18, 0.08);
-const vec3 SEA_WATER_STORM   = vec3(0.48, 0.54, 0.60);
-const vec3 SEA_WATER_NIGHT   = vec3(0.20, 0.32, 0.62);
-
-const vec3 FOG_COL_PREDAWN  = vec3(0.60, 0.46, 0.58);
-const vec3 FOG_COL_DAWN     = vec3(0.92, 0.65, 0.45);
-const vec3 FOG_COL_DAY      = vec3(0.60, 0.76, 0.94);
-const vec3 FOG_COL_DUSK     = vec3(0.30, 0.10, 0.06);
-const vec3 FOG_COL_STORM    = vec3(0.12, 0.14, 0.18);
-const vec3 FOG_COL_NIGHT    = vec3(0.01, 0.01, 0.04);
-
-// ── Sea scalars per scene ───────────────────────────────────────────
-const float SEA_H_PREDAWN = 0.42;
-const float SEA_H_DAWN  = 0.62;
-const float SEA_H_DAY   = 0.48;
-const float SEA_H_DUSK  = 0.72;
-const float SEA_H_NIGHT = 0.48;
-const float SEA_H_STORM = 1.35;
-const float SEA_H_STORM_EXTRA = 0.25;
-
-const float SEA_CH_PREDAWN = 0.68;
-const float SEA_CH_DAWN  = 1.00;
-const float SEA_CH_DAY   = 0.75;
-const float SEA_CH_DUSK  = 1.25;
-const float SEA_CH_NIGHT = 0.75;
-const float SEA_CH_STORM = 2.80;
-
-const float SEA_SPD_PREDAWN = 0.48;
-const float SEA_SPD_DAWN  = 0.80;
-const float SEA_SPD_DAY   = 0.65;
-const float SEA_SPD_DUSK  = 0.90;
-const float SEA_SPD_NIGHT = 0.55;
-const float SEA_SPD_STORM = 1.40;
-
-const float FOG_DEN_PREDAWN = 0.010;
-const float FOG_DEN_DAWN  = 0.012;
-const float FOG_DEN_DAY   = 0.010;
-const float FOG_DEN_DUSK  = 0.014;
-const float FOG_DEN_NIGHT = 0.028;
-const float FOG_DEN_STORM = 0.046;
-
-const float MOON_AMT_PREDAWN = 0.62;
-const float MOON_AMT_DAWN  = 0.10;
-const float MOON_AMT_DAY   = 0.00;
-const float MOON_AMT_DUSK  = 0.00;
-const float MOON_AMT_NIGHT = 0.80;
-const float MOON_AMT_STORM = 0.10;
-
-// ═══════════════════════════════════════════════════════════════════
-// UTILITY
-// ═══════════════════════════════════════════════════════════════════
-
-float sat(float x) { return clamp(x, 0.0, 1.0); }
-
-float smoother(float x) {
-  x = sat(x);
-  return x*x*x * (x*(x*6.0 - 15.0) + 10.0);
-}
-
-vec3 sCol(vec3 c0, vec3 c1, vec3 c2, vec3 c3, vec3 c4, vec3 c5) {
-  int si = int(uSc);
-  vec3 a = c0, b = c1;
-  if      (si == 1) { a = c1; b = c2; }
-  else if (si == 2) { a = c2; b = c3; }
-  else if (si == 3) { a = c3; b = c4; }
-  else if (si == 4) { a = c4; b = c5; }
-  return mix(a, b, uBl);
-}
-
-float sF(float c0, float c1, float c2, float c3, float c4, float c5) {
-  int si = int(uSc);
-  float a = c0, b = c1;
-  if      (si == 1) { a = c1; b = c2; }
-  else if (si == 2) { a = c2; b = c3; }
-  else if (si == 3) { a = c3; b = c4; }
-  else if (si == 4) { a = c4; b = c5; }
-  return mix(a, b, uBl);
-}
-
-float hash(vec2 p) {
-  return fract(sin(dot(p, HASH_DOT)) * HASH_SCALE);
-}
-
-float noise(vec2 p) {
-  vec2 i = floor(p), f = fract(p);
-  f = f*f * (3.0 - 2.0*f);
-  float a = hash(i),              b = hash(i + vec2(1,0));
-  float c = hash(i + vec2(0,1)),  d = hash(i + vec2(1,1));
-  return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
-}
-
-float snoise(vec2 p) { return noise(p) * 2.0 - 1.0; }
-
-// ═══════════════════════════════════════════════════════════════════
-// SEA
-// ═══════════════════════════════════════════════════════════════════
-
-float sea_octave(vec2 uv, float choppy) {
-  uv += snoise(uv);
-  vec2 wv  = 1.0 - abs(sin(uv));
-  vec2 swv = abs(cos(uv));
-  wv = mix(wv, swv, wv);
-  return pow(1.0 - pow(wv.x * wv.y, SEA_OCT_POWER), choppy);
-}
-
-float seaMap(vec3 p, float seaH, float ch, float seaT) {
-  float freq = SEA_FREQ_BASE, amp = seaH, choppy = ch;
-  vec2  uv   = p.xz; uv.x *= SEA_UV_X_SCALE;
-  float d, h = 0.0;
-  for (int i = 0; i < SEA_OCTAVES_GEO; i++) {
-    d    = sea_octave((uv + seaT) * freq, choppy);
-    d   += sea_octave((uv - seaT) * freq, choppy);
-    h   += d * amp;
-    uv  *= SEA_OCT_M;
-    freq *= SEA_FREQ_MUL;
-    amp  *= SEA_AMP_MUL;
-    choppy = mix(choppy, 1.0, SEA_CHOPPY_BLEND);
-  }
-  return p.y - h;
-}
-
-float seaMapFine(vec3 p, float seaH, float ch, float seaT) {
-  float freq = SEA_FREQ_BASE, amp = seaH, choppy = ch;
-  vec2  uv   = p.xz; uv.x *= SEA_UV_X_SCALE;
-  float d, h = 0.0;
-  for (int i = 0; i < SEA_OCTAVES_FRAG; i++) {
-    d    = sea_octave((uv + seaT) * freq, choppy);
-    d   += sea_octave((uv - seaT) * freq, choppy);
-    h   += d * amp;
-    uv  *= SEA_OCT_M;
-    freq *= SEA_FREQ_MUL;
-    amp  *= SEA_AMP_MUL;
-    choppy = mix(choppy, 1.0, SEA_CHOPPY_BLEND);
-  }
-  return p.y - h;
-}
-
-float seaTrace(vec3 ori, vec3 dir, out vec3 p, float seaH, float ch, float seaT) {
-  float tm = 0.0, tx = SEA_TRACE_FAR;
-  float hx = seaMap(ori + dir * tx, seaH, ch, seaT);
-  if (hx > 0.0) { p = ori + dir * tx; return tx; }
-  float hm = seaMap(ori, seaH, ch, seaT);
-  float tmid = 0.0;
-  for (int i = 0; i < SEA_TRACE_STEPS; i++) {
-    tmid = mix(tm, tx, hm / (hm - hx));
-    p    = ori + dir * tmid;
-    float hmid = seaMap(p, seaH, ch, seaT);
-    if (hmid < 0.0) { tx = tmid; hx = hmid; }
-    else            { tm = tmid; hm = hmid; }
-  }
-  return tmid;
-}
-
-vec3 seaNormal(vec3 p, float eps, float seaH, float ch, float seaT) {
-  vec3 n;
-  n.y = seaMapFine(p, seaH, ch, seaT);
-  n.x = seaMapFine(vec3(p.x + eps, p.y, p.z), seaH, ch, seaT) - n.y;
-  n.z = seaMapFine(vec3(p.x, p.y, p.z + eps), seaH, ch, seaT) - n.y;
-  n.y = eps;
-  return normalize(n);
-}
-
-// ═══════════════════════════════════════════════════════════════════
-// MAIN
-// ═══════════════════════════════════════════════════════════════════
-
-void main() {
-  vec2  uv = (gl_FragCoord.xy - uR * 0.5) / uR.y;
-  float s  = smoother(uS);           // used only for slow camera drift
-
-  // Single scene timeline: 0=dawn 1=midday 2=dusk 3=storm 4=night 5=predawn
-  float sc = uSc + uBl;
-
-  // Storm peaks at STORM and clears completely by NIGHT
-  float storm = smoothstep(SC_DUSK, SC_STORM, sc) * (1.0 - smoothstep(SC_STORM, SC_NIGHT, sc));
-  // Night (stars) arrives with NIGHT and holds through PRE-DAWN
-  float night = smoothstep(SC_STORM, SC_NIGHT, sc);
-
-  // ── Scene-driven sea parameters ────────────────────────────────
-  float seaH  = sF(SEA_H_DAWN, SEA_H_DAY, SEA_H_DUSK, SEA_H_STORM, SEA_H_NIGHT, SEA_H_PREDAWN)
-               + storm * SEA_H_STORM_EXTRA;
-  float seaCh = sF(SEA_CH_DAWN, SEA_CH_DAY, SEA_CH_DUSK, SEA_CH_STORM, SEA_CH_NIGHT, SEA_CH_PREDAWN);
-  float seaT  = uT * sF(SEA_SPD_DAWN, SEA_SPD_DAY, SEA_SPD_DUSK, SEA_SPD_STORM, SEA_SPD_NIGHT, SEA_SPD_PREDAWN);
-
-  // ── Lightning ──────────────────────────────────────────────────
-  float ltSlot  = uLtS;
-  float ltFlash = uLtF * storm;
-
-  // ── Scene palette ──────────────────────────────────────────────
-  vec3 skyTop   = sCol(SKY_TOP_DAWN,   SKY_TOP_DAY,   SKY_TOP_DUSK,   SKY_TOP_STORM,   SKY_TOP_NIGHT,   SKY_TOP_PREDAWN);
-  vec3 skyHori  = sCol(SKY_HOR_DAWN,   SKY_HOR_DAY,   SKY_HOR_DUSK,   SKY_HOR_STORM,   SKY_HOR_NIGHT,   SKY_HOR_PREDAWN);
-  vec3 sunCol   = sCol(SUN_COL_DAWN,   SUN_COL_DAY,   SUN_COL_DUSK,   SUN_COL_STORM,   SUN_COL_NIGHT,   SUN_COL_PREDAWN);
-  vec3 seaBase  = sCol(SEA_BASE_DAWN,  SEA_BASE_DAY,  SEA_BASE_DUSK,  SEA_BASE_STORM,  SEA_BASE_NIGHT,  SEA_BASE_PREDAWN);
-  vec3 seaWater = sCol(SEA_WATER_DAWN, SEA_WATER_DAY, SEA_WATER_DUSK, SEA_WATER_STORM, SEA_WATER_NIGHT, SEA_WATER_PREDAWN);
-  vec3 fogCol   = sCol(FOG_COL_DAWN,   FOG_COL_DAY,   FOG_COL_DUSK,   FOG_COL_STORM,   FOG_COL_NIGHT,   FOG_COL_PREDAWN);
-  float fogDen  = sF(FOG_DEN_DAWN, FOG_DEN_DAY, FOG_DEN_DUSK, FOG_DEN_STORM, FOG_DEN_NIGHT, FOG_DEN_PREDAWN);
-
-  // Delayed warm-up for midday→dusk
-  if (int(uSc) == 1) {
-    float t  = uBl;
-    float d5 = t * t * t * t * t;
-    sunCol   = mix(SUN_COL_DAY,      SUN_COL_DUSK,   d5);
-    seaWater = mix(SEA_WATER_DAY,    SEA_WATER_DUSK, d5);
-    seaBase  = mix(SEA_BASE_DAY,     SEA_BASE_DUSK,  d5);
-    fogCol   = mix(FOG_COL_DAY,      FOG_COL_DUSK,   d5);
-    fogDen   = mix(FOG_DEN_DAY,      FOG_DEN_DUSK,   d5);
-  }
-
-  // ── Sun / moon direction & intensity ───────────────────────────
-  // Rises on the left at DAWN, peaks at MIDDAY, sets on the right at DUSK,
-  // sinks out of sight for STORM/NIGHT, then returns just under the left
-  // horizon for PRE-DAWN so the loop back to DAWN is continuous.
-  float sunAngle = sat(sc / SC_DUSK) * PI;
-  vec3  sunDay   = vec3(cos(sunAngle) * SUN_ARC_X,
-                        sin(sunAngle) * SUN_ARC_Y_SCALE - SUN_SET_DIP * smoothstep(SC_DUSK, SC_DUSK + 0.6, sc),
-                        -1.0);
-  vec3  sunPre   = vec3(SUN_ARC_X, SUN_PREDAWN_Y, -1.0);
-  vec3  sunDir   = normalize(mix(sunDay, sunPre, smoothstep(SC_NIGHT, SC_PREDAWN, sc)));
-
-  vec3  moonDir = normalize(MOON_DIR_RAW);
-  float moonAmt = sF(MOON_AMT_DAWN, MOON_AMT_DAY, MOON_AMT_DUSK, MOON_AMT_STORM, MOON_AMT_NIGHT, MOON_AMT_PREDAWN);
-  float sunAbove = step(0.0, sunDir.y);
-  float sunGlow  = smoothstep(SUN_GLOW_LO, SUN_GLOW_HI, sunDir.y);
-
-  // ── Camera ─────────────────────────────────────────────────────
-  vec3 ori = vec3(0.0, mix(CAM_HEIGHT_START, CAM_HEIGHT_END, s), uT * CAM_DRIFT_SPEED);
-  vec3 rd  = normalize(vec3(uv.x, uv.y - CAM_PITCH, CAM_FOCAL));
-  rd.z    += length(uv) * CAM_BARREL;
-  rd       = normalize(rd);
-
-  // ── Sky ────────────────────────────────────────────────────────
-  vec3 skyCol;
-  {
-    float elev = clamp(rd.y, 0.0, 1.0);
-
-    vec3 skyTopFinal  = skyTop;
-    vec3 skyHoriFinal = skyHori;
-    if (int(uSc) == 1) {
-      float t = uBl;
-      float db = t * t * t * t * t;
-      skyTopFinal  = mix(SKY_TOP_DAY,     SKY_TOP_DUSK,   db);
-      skyHoriFinal = mix(SKY_HOR_DAY,     SKY_HOR_DUSK,   db * db);
-    }
-    if (int(uSc) == 0) {
-      float db = uBl * uBl;
-      skyTopFinal  = mix(SKY_TOP_DAWN,    SKY_TOP_DAY,    db);
-      skyHoriFinal = mix(SKY_HOR_DAWN,    SKY_HOR_DAY,    uBl);
-    }
-
-    float gradExp = SKY_GRAD_EXP;
-    if (int(uSc) == 2) gradExp = 0.22;
-    if (int(uSc) == 1) {
-      float db = uBl * uBl * uBl * uBl * uBl;
-      gradExp = mix(SKY_GRAD_EXP, 0.22, db);
-    }
-
-    skyCol = mix(skyHoriFinal, skyTopFinal, pow(elev, gradExp));
-
-    // Dusk crimson mid-band
-    if (int(uSc) == 2 || (int(uSc) == 1 && uBl > 0.6)) {
-      float duskAmt = (int(uSc) == 2) ? (1.0 - uBl) : (uBl - 0.6) / 0.4;
-      float midBand = exp(-pow((elev - 0.12) / 0.09, 2.0));
-      vec3  crimson = vec3(0.78, 0.10, 0.04);
-      skyCol = mix(skyCol, crimson, midBand * 0.55 * duskAmt);
-    }
-
-    // Clouds
-    float cn1    = noise(vec2(rd.x * CLOUD_FREQ_A + rd.y * 3.0, uT * CLOUD_TIME_A));
-    float cn2    = noise(vec2(rd.x * CLOUD_FREQ_B - rd.y * 4.0, uT * CLOUD_TIME_B));
-    float clouds = smoothstep(CLOUD_THRESH_LO, CLOUD_THRESH_HI,
-                              cn1 * CLOUD_BLEND_A + cn2 * CLOUD_BLEND_B);
-    clouds *= smoothstep(CLOUD_HOR_LO, CLOUD_HOR_HI, rd.y)
-           * (CLOUD_AMT_BASE + storm * CLOUD_AMT_STORM);
-    vec3 cloudC  = mix(CLOUD_COL_CLEAR, CLOUD_COL_STORM, storm);
-    skyCol = mix(skyCol, mix(skyCol * CLOUD_DARKEN, cloudC, CLOUD_MIX), clouds);
-
-    // Sun glows + disk
-    float sd = max(dot(rd, sunDir), 0.0);
-    skyCol += sunCol * pow(sd, SUN_HALO_EXP_A) * SUN_HALO_SCL_A * sunGlow;
-    skyCol += sunCol * pow(sd, SUN_HALO_EXP_B) * SUN_HALO_SCL_B * sunGlow;
-    skyCol += sunCol * pow(sd, SUN_HALO_EXP_C) * SUN_HALO_SCL_C * sunGlow;
-    skyCol += sunCol * pow(sd, SUN_HALO_EXP_D) * SUN_HALO_SCL_D * sunGlow;
-    skyCol += sunCol * smoothstep(SUN_DISK_LO, SUN_DISK_HI, dot(rd, sunDir))
-                     * SUN_DISK_SCL * sunGlow * sunAbove;
-    skyCol += sunCol * exp(-abs(rd.y) * SUN_HORIZON_FALL) * SUN_HORIZON_SCL * sunGlow;
-
-    // Moon disk + halo
-    if (moonAmt > MOON_THRESHOLD) {
-      float md = max(dot(rd, moonDir), 0.0);
-      skyCol += MOON_COL_DISK   * smoothstep(MOON_DISK_LO, MOON_DISK_HI, dot(rd, moonDir))
-                                * MOON_DISK_SCL * moonAmt;
-      skyCol += MOON_COL_CORONA * pow(md, MOON_CORONA_EXP) * MOON_CORONA_SCL * moonAmt;
-      skyCol += MOON_COL_HALO1  * pow(md, MOON_HALO1_EXP)  * MOON_HALO1_SCL  * moonAmt;
-      skyCol += MOON_COL_HALO2  * pow(md, MOON_HALO2_EXP)  * MOON_HALO2_SCL  * moonAmt;
-    }
-
-    // Stars — night through pre-dawn
-    if (night > NIGHT_STARS_THRESHOLD) {
-      float starAngle = uT * 0.008;
-      float cT = cos(starAngle), sT = sin(starAngle);
-      vec3 srd = vec3(mat2(cT,-sT,sT,cT) * rd.xy, rd.z);
-
-      float sn  = hash(srd.xy * 300.0 + vec2(srd.z * 300.0));
-      float sBright = pow(clamp(sn - 0.9994, 0.0, 1.0) * 1667.0, 1.6);
-      float sMedium = pow(clamp(sn - 0.998,  0.0, 1.0) *  500.0, 2.0) * 0.30;
-      float sFaint  = pow(clamp(sn - 0.993,  0.0, 1.0) *  143.0, 2.0) * 0.07;
-      float stars = sBright + sMedium + sFaint;
-      float scintSpeed = 0.30 + sn * 0.60;
-      stars *= 0.92 + 0.08 * sin(uT * scintSpeed + sn * 19.7);
-
-      float starMask = smoothstep(STAR_HOR_LO, STAR_HOR_HI, rd.y)
-                     * (1.0 - storm * STAR_STORM_SUPP);
-      skyCol += vec3(stars) * starMask * night * STAR_NIGHT_SCL;
-    }
-
-    // Lightning sheet glow
-    skyCol += LT_COL_SHEET * ltFlash * LT_SHEET_BRIGHT;
-
-    // Lightning bolts
-    if (ltFlash > 0.003 && rd.y > LT_BOLT_ELEV_MIN && rd.y < LT_BOLT_ELEV_MAX) {
-      float screenX = rd.x / max(0.05, -rd.z);
-      float elevN   = (rd.y - LT_BOLT_ELEV_MIN) / (LT_BOLT_ELEV_MAX - LT_BOLT_ELEV_MIN);
-
-      float boltGlow = 0.0;
-      float horizFade = smoothstep(0.0, 0.12, elevN);
-      const int NSEGS = 18;
-
-      for (int bi = 0; bi < 2; bi++) {
-        float bSeed = ltSlot * 7.3 + float(bi) * 50.0;
-        float j     = bSeed * 17.3;
-
-        float xs[18];
-        xs[0] = (hash(vec2(bSeed, 0.3)) - 0.5) * 1.0;
-        for (int i = 1; i < NSEGS; i++) {
-          float fi = float(i);
-          xs[i] = xs[i-1] + (hash(vec2(j + fi * 0.71, 2.0)) - 0.5) * 0.06;
+(() => {
+'use strict';
+const rnd = (a, b) => a + Math.random() * (b - a);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const $ = id => document.getElementById(id);
+
+/* =========================================================
+   聲源目錄：每個 build(k) 接到 k.out，回傳 { tick(now, depth) }
+   ========================================================= */
+const CAT = {
+  waves: { name:'海浪', desc:'8–14 秒的湧浪週期，浪頂亮、浪谷暗', gain:1.0,
+    def:{vol:70,low:2,high:-3,width:80,pan:0},
+    build(k){
+      const body=k.noise('brown',.98), foam=k.noise('pink',1.02);
+      const bg=k.gain(1.0), fg=k.gain(.3), lp=k.filter('lowpass',420,.4), sw=k.gain(.2);
+      body.connect(bg).connect(lp); foam.connect(fg).connect(lp); lp.connect(sw).connect(k.out);
+      let next=k.now()+.2;
+      return { tick(now,d){
+        while(next<now+3){
+          const per=rnd(8.5,11)+rnd(-1.5,3)*d, peak=1-rnd(0,.42)*d, rise=per*rnd(.38,.48), fall=per-rise;
+          sw.gain.setTargetAtTime(peak,next,rise/2.6);
+          sw.gain.setTargetAtTime(.15+.07*Math.random(),next+rise,fall/2.8);
+          lp.frequency.setTargetAtTime(520+1300*peak,next,rise/2.4);
+          lp.frequency.setTargetAtTime(320,next+rise,fall/2.4);
+          fg.gain.setTargetAtTime(.25+.35*peak,next+rise*.7,rise/3);
+          fg.gain.setTargetAtTime(.2,next+rise*1.2,fall/3);
+          next+=per;
         }
-
-        for (int i = 0; i < NSEGS; i++) {
-          float fi    = float(i);
-          float segHi = 1.0 - fi / float(NSEGS);
-          float segLo = 1.0 - (fi + 1.0) / float(NSEGS);
-          float x0    = xs[i];
-          float x1    = x0;
-          if (i < NSEGS - 1) x1 = xs[i + 1];
-
-          if (elevN >= segLo && elevN < segHi) {
-            float t  = (segHi - elevN) / (segHi - segLo);
-            float cx = mix(x0, x1, t);
-            float dM = abs(screenX - cx);
-            boltGlow += (1.0 - smoothstep(0.0, 0.0007, dM)) * 4.5;
-            boltGlow += exp(-dM * 120.0) * 1.2;
-            boltGlow += exp(-dM * 40.0)  * 0.35;
-          }
-
-          if (hash(vec2(j + fi * 1.9, 3.0)) < 0.25 && segLo > 0.06) {
-            float ba    = hash(vec2(j + fi * 3.1, 4.0)) * 1.5;
-            float bSpan = segLo * 0.65;
-            float bTop  = segLo;
-            float bBot  = segLo - bSpan;
-
-            if (elevN >= bBot && elevN < bTop) {
-              float bt = (bTop - elevN) / bSpan;
-              float bFade = 1.0 - bt * bt;
-
-              const int NBSEGS = 7;
-              float bcX = x0;
-              for (int k = 0; k < NBSEGS; k++) {
-                float fk   = float(k);
-                float tLo  = fk       / float(NBSEGS);
-                float tHi  = (fk+1.0) / float(NBSEGS);
-                float bnX  = bcX + (hash(vec2(ba + fk * 0.5, 5.0)) - 0.5) * 0.05;
-                if (bt >= tLo && bt < tHi) {
-                  float lt   = (bt - tLo) / (tHi - tLo);
-                  float bcx  = mix(bcX, bnX, lt);
-                  float dB   = abs(screenX - bcx);
-                  boltGlow  += ((1.0 - smoothstep(0.0, 0.0006, dB)) * 2.5
-                              + exp(-dB * 100.0) * 0.6
-                              + exp(-dB * 32.0)  * 0.15) * bFade;
-                }
-                bcX = bnX;
-              }
-            }
-          }
-        }
+      }};
+    }},
+  rain: { name:'雨聲', desc:'連續中雨，雨勢每幾秒緩慢起伏', gain:1.0,
+    def:{vol:65,low:0,high:-2,width:90,pan:0},
+    build(k){
+      const w=k.noise('white'), p=k.noise('pink',.99);
+      const hp=k.filter('highpass',700,.5), lp=k.filter('lowpass',6200,.5), wg=k.gain(.32);
+      const bp=k.filter('bandpass',2400,.6), pg=k.gain(.9), dens=k.gain(1);
+      w.connect(hp).connect(lp).connect(wg).connect(dens);
+      p.connect(bp).connect(pg).connect(dens); dens.connect(k.out);
+      let next=0;
+      return { tick(now,d){
+        if(now<next) return; next=now+rnd(3,7);
+        dens.gain.setTargetAtTime(1-rnd(0,.35)*d,now,4);
+        lp.frequency.setTargetAtTime(5000+rnd(0,2400)*(.4+d),now,5);
+      }};
+    }},
+  drips: { name:'滴水', desc:'屋簷偶爾落下的水滴，帶一點空間回音', gain:.8,
+    def:{vol:28,low:0,high:-3,width:60,pan:20},
+    build(k){
+      const c=k.ctx, dry=k.gain(1), echo=k.delay(.13), fb=k.gain(.28), elp=k.filter('lowpass',2200,.5), wet=k.gain(.35);
+      dry.connect(k.out); dry.connect(echo); echo.connect(elp).connect(fb).connect(echo); elp.connect(wet).connect(k.out);
+      let next=k.now()+1;
+      function drop(t){
+        const o=c.createOscillator(), g=c.createGain(), pn=c.createStereoPanner(), f=rnd(700,1500);
+        o.frequency.setValueAtTime(f,t); o.frequency.exponentialRampToValueAtTime(f*rnd(1.4,1.9),t+.05);
+        g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(rnd(.1,.26),t+.004);
+        g.gain.exponentialRampToValueAtTime(.0005,t+rnd(.08,.16));
+        pn.pan.value=rnd(-.7,.7);
+        o.connect(g).connect(pn).connect(dry); o.start(t); o.stop(t+.25);
       }
+      return { tick(now,d){ while(next<now+1.5){ drop(next); next+=rnd(1.2,3.5)*(1+rnd(0,1.5)*d); } } };
+    }},
+  pink: { name:'粉紅噪音', desc:'每個八度能量相同，比白噪音柔和', gain:.9,
+    def:{vol:40,low:0,high:-4,width:70,pan:0},
+    build(k){
+      const n=k.noise('pink'), lp=k.filter('lowpass',7000,.5), g=k.gain(1);
+      n.connect(lp).connect(g).connect(k.out); let next=0;
+      return { tick(now,d){ if(now<next) return; next=now+rnd(6,12); g.gain.setTargetAtTime(1-rnd(0,.12)*d,now,5); } };
+    }},
+  brown: { name:'棕色噪音', desc:'能量集中在低頻，像遠方的低沉轟鳴', gain:1.0,
+    def:{vol:45,low:0,high:-2,width:70,pan:0},
+    build(k){
+      const n=k.noise('brown'), lp=k.filter('lowpass',900,.5), g=k.gain(1);
+      n.connect(lp).connect(g).connect(k.out); let next=0;
+      return { tick(now,d){ if(now<next) return; next=now+rnd(7,14); g.gain.setTargetAtTime(1-rnd(0,.12)*d,now,6); } };
+    }},
+  wind: { name:'風聲', desc:'帶通噪音模擬氣流，頻率與風勢緩慢漂移', gain:1.0,
+    def:{vol:30,low:0,high:-3,width:60,pan:0},
+    build(k){
+      const n=k.noise('pink'), bp=k.filter('bandpass',420,.8), g=k.gain(2.0);
+      const n2=k.noise('white',.97), bp2=k.filter('bandpass',900,6), g2=k.gain(.06), gust=k.gain(.8);
+      n.connect(bp).connect(g).connect(gust); n2.connect(bp2).connect(g2).connect(gust); gust.connect(k.out);
+      let next=0;
+      return { tick(now,d){
+        if(now<next) return; const dur=rnd(2.5,6); next=now+dur;
+        const f=rnd(260,600)+rnd(0,260)*d;
+        bp.frequency.setTargetAtTime(f,now,dur/2.5);
+        bp2.frequency.setTargetAtTime(f*rnd(1.9,2.4),now,dur/2.5);
+        gust.gain.setTargetAtTime(.95-rnd(.05,.55)*d,now,dur/2.2);
+        g2.gain.setTargetAtTime(rnd(.02,.08)*(.4+d),now,dur/2);
+      }};
+    }},
+  fire: { name:'壁爐', desc:'低沉燃燒聲加上隨機劈啪，偶有成串爆裂', gain:1.0,
+    def:{vol:62,low:2,high:-3,width:40,pan:-15},
+    build(k){
+      const c=k.ctx;
+      const r=k.noise('brown'), rl=k.filter('lowpass',170,.6), rg=k.gain(.9);
+      r.connect(rl).connect(rg).connect(k.out);
+      const h=k.noise('pink',1.03), hb=k.filter('bandpass',3000,.5), hg=k.gain(.07);
+      h.connect(hb).connect(hg).connect(k.out);
+      let next=k.now()+.2, rate=5, nextRate=0;
+      function crackle(t,s){
+        const src=c.createBufferSource(), f=c.createBiquadFilter(), g=c.createGain(), pn=c.createStereoPanner();
+        const pop=Math.random()<.15;
+        src.buffer=E.buf.white; f.type='bandpass';
+        f.frequency.value=pop?rnd(500,1100):rnd(1800,5500); f.Q.value=pop?1.5:rnd(.8,3);
+        const amp=Math.min(.7,.15/Math.pow(Math.random()+.05,.6))*s*(pop?1.5:1);
+        const dur=pop?rnd(.03,.07):rnd(.005,.025);
+        g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(amp,t+.001); g.gain.exponentialRampToValueAtTime(.0003,t+dur);
+        pn.pan.value=rnd(-.35,.35);
+        src.connect(f).connect(g).connect(pn).connect(k.out);
+        src.start(t,rnd(0,9)); src.stop(t+dur+.02);
+      }
+      return { tick(now,d){
+        if(now>nextRate){ rate=rnd(2.5,6)+rnd(0,5)*d; nextRate=now+rnd(4,10); rg.gain.setTargetAtTime(.75+rnd(0,.25),now,3); }
+        while(next<now+1.5){
+          crackle(next,1);
+          if(Math.random()<.12){ const m=2+Math.floor(rnd(0,4)); for(let i=1;i<=m;i++) crackle(next+i*rnd(.015,.06),.6); }
+          next+=-Math.log(1-Math.random())/rate;
+        }
+      }};
+    }},
+  room: { name:'低頻背景', desc:'室內空氣感與極低的嗡鳴，填補安靜的空洞', gain:1.0,
+    def:{vol:38,low:0,high:-6,width:50,pan:0},
+    build(k){
+      const b=k.noise('brown'), lp=k.filter('lowpass',140,.5), bg=k.gain(1.1);
+      b.connect(lp).connect(bg).connect(k.out);
+      const a=k.noise('pink',.98), alp=k.filter('lowpass',500,.5), ag=k.gain(.06);
+      a.connect(alp).connect(ag).connect(k.out);
+      const o1=k.osc('sine',55), g1=k.gain(.035), o2=k.osc('sine',82.4), g2=k.gain(.018);
+      o1.connect(g1).connect(k.out); o2.connect(g2).connect(k.out);
+      let next=0;
+      return { tick(now,d){
+        if(now<next) return; next=now+rnd(6,12);
+        g1.gain.setTargetAtTime(.035*(1-rnd(0,.5)*d),now,5); g2.gain.setTargetAtTime(.018*(1-rnd(0,.6)*d),now,5);
+      }};
+    }},
+  stream: { name:'流水', desc:'溪水底噪加上多個窄帶共振，形成潺潺水聲', gain:1.0,
+    def:{vol:60,low:0,high:-3,width:85,pan:0},
+    build(k){
+      const p=k.noise('pink'), bp=k.filter('bandpass',1100,.4), pg=k.gain(.9);
+      const b=k.noise('brown',1.01), blp=k.filter('lowpass',350,.5), bgn=k.gain(.5);
+      p.connect(bp).connect(pg).connect(k.out); b.connect(blp).connect(bgn).connect(k.out);
+      const w=k.noise('white',.99);
+      const pans=[-.55,-.15,.2,.55];
+      const bands=pans.map(pv=>{
+        const f=k.filter('bandpass',rnd(600,2400),rnd(5,9)), g=k.gain(2), pn=k.panner(pv);
+        w.connect(f); f.connect(g).connect(pn).connect(k.out);
+        return {f,g,t:k.now()};
+      });
+      let next=0;
+      return { tick(now,d){
+        for(const s of bands){
+          while(s.t<now+1.2){
+            s.f.frequency.setTargetAtTime(rnd(500,2600),s.t,.035);
+            s.g.gain.setTargetAtTime(rnd(1,4)*(.55+.45*d),s.t,.05);
+            s.t+=rnd(.05,.17);
+          }
+        }
+        if(now>=next){ next=now+rnd(5,10); pg.gain.setTargetAtTime(.9-rnd(0,.25)*d,now,4); }
+      }};
+    }},
+  crickets: { name:'蟲鳴', desc:'三隻位置固定的遠處蟋蟀，偶爾停歇', gain:.7,
+    def:{vol:18,low:0,high:-4,width:90,pan:0},
+    build(k){
+      const c=k.ctx, lp=k.filter('lowpass',5200,.5), g=k.gain(.5);
+      lp.connect(g).connect(k.out);
+      const bugs=[-.6,.5,.1].map(pv=>({f:rnd(4200,4800),pan:pv,next:k.now()+rnd(.3,3)}));
+      function chirp(b,t){
+        const o=c.createOscillator(), gg=c.createGain(), pn=c.createStereoPanner();
+        o.frequency.value=b.f; pn.pan.value=b.pan; gg.gain.setValueAtTime(0,t);
+        const n=3+Math.floor(rnd(0,2)); let tp=t;
+        for(let i=0;i<n;i++){ gg.gain.setValueAtTime(0,tp); gg.gain.linearRampToValueAtTime(.22,tp+.006); gg.gain.linearRampToValueAtTime(0,tp+.02); tp+=.035; }
+        o.connect(gg).connect(pn).connect(lp); o.start(t); o.stop(tp+.05);
+      }
+      return { tick(now,d){
+        for(const b of bugs){
+          while(b.next<now+1.5){
+            chirp(b,b.next);
+            b.next+=rnd(.7,1.6)*(1+d*rnd(0,1.5));
+            if(Math.random()<.08*(.5+d)) b.next+=rnd(4,14);
+          }
+        }
+      }};
+    }},
+  pad: { name:'柔和音墊', desc:'D 調開放和弦，五個聲部各自緩慢呼吸', gain:.2,
+    def:{vol:30,low:0,high:-6,width:80,pan:0},
+    build(k){
+      const lp=k.filter('lowpass',700,.3), g=k.gain(1); lp.connect(g).connect(k.out);
+      const notes=[73.42,110,146.83,164.81,220];
+      const voices=notes.map((f,i)=>{
+        const o=k.osc('triangle',f); o.detune.value=rnd(-5,5);
+        const vg=k.gain(0), pn=k.panner(i/(notes.length-1)*1.2-.6);
+        o.connect(vg).connect(pn).connect(lp);
+        vg.gain.setTargetAtTime(.45,k.now(),3);
+        return {vg,next:k.now()+rnd(3,7)};
+      });
+      let nextF=0;
+      return { tick(now,d){
+        for(const v of voices){ if(now<v.next) continue; v.next=now+rnd(5,10); v.vg.gain.setTargetAtTime(.5-rnd(0,.35)*(.3+d),now,rnd(3,6)); }
+        if(now>=nextF){ nextF=now+rnd(8,14); lp.frequency.setTargetAtTime(550+rnd(0,350),now,6); }
+      }};
+    }},
+};
 
-      skyCol += LT_COL_BOLT * boltGlow * ltFlash * horizFade;
-    }
+const SCENES = [
+  {id:'sea',    name:'海邊入睡', line:'海浪 · 粉紅噪音 · 遠方微風', tag:'SEA',
+   layers:[['waves',{vol:72}],['pink',{vol:32,high:-6}],['wind',{vol:26,pan:-35,width:50,high:-5}]]},
+  {id:'rain',   name:'雨夜放鬆', line:'連續雨聲 · 偶爾滴水 · 低頻背景', tag:'RAIN',
+   layers:[['rain',{vol:66}],['drips',{vol:28,pan:25}],['room',{vol:40}]]},
+  {id:'cabin',  name:'溫暖小屋', line:'壁爐 · 低沉室內環境音', tag:'CABIN',
+   layers:[['fire',{vol:64}],['room',{vol:46}],['brown',{vol:18,high:-6}]]},
+  {id:'forest', name:'森林溪流', line:'流水 · 微風 · 稀疏蟲鳴', tag:'FOREST',
+   layers:[['stream',{vol:60}],['wind',{vol:24,pan:30}],['crickets',{vol:20,pan:-20}]]},
+  {id:'still',  name:'深層靜謐', line:'棕色噪音 · 柔和音墊 · 漸弱停止', tag:'STILL', fade:true,
+   layers:[['brown',{vol:56}],['pad',{vol:30}]]},
+];
 
-    // Horizon mist
-    float hzMist = exp(-abs(rd.y) * mix(HZ_MIST_CLEAR, HZ_MIST_STORM, storm));
-    skyCol += fogCol * hzMist * (HZ_MIST_SCL + storm * HZ_MIST_STORM_ADD);
-    skyCol  = mix(skyCol, skyCol * STORM_SKY_TINT, storm * STORM_SKY_TINT_AMT);
-  }
+/* =========================================================
+   狀態與儲存
+   ========================================================= */
+let uidSeq=1;
+const mkLayer=(type,over={})=>({uid:'L'+(uidSeq++),type,...CAT[type].def,...over,mute:false,solo:false});
+const sceneLayers=id=>SCENES.find(s=>s.id===id).layers.map(([t,o])=>mkLayer(t,o));
 
-  // ── Sea ────────────────────────────────────────────────────────
-  // edge0 < edge1 as the spec requires; 1 below horizon, 0 above
-  float seaMix = pow(1.0 - smoothstep(SEA_HORIZON_BLEND, 0.0, rd.y), SEA_HORIZON_EXP);
-  vec3  col;
-
-  if (seaMix > SEA_MIX_THRESHOLD) {
-    vec3 p;
-    seaTrace(ori, rd, p, seaH, seaCh, seaT);
-    vec3  dist   = p - ori;
-    float eps    = dot(dist, dist) * SEA_NORMAL_EPS_K / uR.x;
-    vec3  n      = seaNormal(p, eps, seaH, seaCh, seaT);
-    float fresnel = pow(1.0 - max(dot(n, -rd), 0.0), FRESNEL_EXP) * FRESNEL_SCL;
-
-    vec3  reflDir = reflect(rd, n);
-    float rElev   = clamp(reflDir.y, 0.0, 1.0);
-    vec3  reflSky = mix(skyHori, skyTop, pow(rElev, SKY_GRAD_EXP));
-
-    float rSun = max(dot(reflDir, sunDir), 0.0);
-    reflSky += sunCol * pow(rSun, REFL_SUN_EXP_A) * REFL_SUN_SCL_A * sunGlow;
-    reflSky += sunCol * pow(rSun, REFL_SUN_EXP_B) * REFL_SUN_SCL_B * sunGlow;
-
-    if (moonAmt > MOON_THRESHOLD) {
-      float rMoon = max(dot(reflDir, moonDir), 0.0);
-      reflSky += REFL_MOON_COL_A * pow(rMoon, REFL_MOON_EXP_A) * REFL_MOON_SCL_A * moonAmt;
-      reflSky += REFL_MOON_COL_B * pow(rMoon, REFL_MOON_EXP_B) * REFL_MOON_SCL_B * moonAmt;
-      reflSky += REFL_MOON_COL_C * pow(rMoon, REFL_MOON_EXP_C) * REFL_MOON_SCL_C * moonAmt;
-    }
-
-    float diff      = pow(max(dot(n, sunDir) * DIFF_WRAP + DIFF_LIFT, 0.0), DIFF_EXP) * sunGlow;
-    vec3  refracted = seaBase + diff * seaWater * DIFF_WATER_SCL;
-    vec3  waterCol  = mix(refracted, reflSky, fresnel);
-
-    float atten = max(1.0 - dot(dist, dist) * SSS_ATTEN_K, 0.0);
-    waterCol   += seaWater * (p.y - seaH) * SSS_SCL * atten;
-
-    float specNrm = (SPEC_EXP + 8.0) / (PI * 8.0);
-    float spec    = pow(max(dot(reflect(-sunDir, n), -rd), 0.0), SPEC_EXP) * specNrm;
-    waterCol     += sunCol * spec * sunAbove;
-
-    float glitter = noise(p.xz * GLITTER_UV_SCL + vec2(uT * GLITTER_TIME_U, uT * GLITTER_TIME_V));
-    waterCol += sunCol * smoothstep(GLITTER_THRESH, 1.0, glitter) * GLITTER_SCL * sunGlow * sunAbove;
-
-    if (moonAmt > MOON_THRESHOLD) {
-      float mr = max(dot(reflect(-moonDir, n), -rd), 0.0);
-      waterCol += MSPEC_COL_A * pow(mr, MSPEC_EXP_A) * MSPEC_SCL_A * moonAmt;
-      waterCol += MSPEC_COL_B * pow(mr, MSPEC_EXP_B) * MSPEC_SCL_B * moonAmt;
-    }
-
-    waterCol += LT_COL_SHEET * ltFlash * LT_WATER_BRIGHT;
-
-    waterCol = mix(waterCol, fogCol, 1.0 - exp(-length(dist) * fogDen * FOG_SCALE));
-
-    col = mix(skyCol, waterCol, seaMix);
-  } else {
-    col = skyCol;
-  }
-
-  // ── Post-processing ────────────────────────────────────────────
-  col  = mix(fogCol, col, smoothstep(HOR_EDGE_LO, HOR_EDGE_HI, rd.y) * HOR_BLEND
-           + (1.0 - HOR_BLEND));
-  col += (hash(gl_FragCoord.xy * GRAIN_UV_SCL + floor(uT * GRAIN_TIME_SCL)) - 0.5)
-       * GRAIN_STR;
-  gl_FragColor = vec4(clamp(pow(max(col, 0.0), vec3(GAMMA)), 0.0, 1.0), 1.0);
+const KEY='yesheng.sleepscape.v1';
+let saved={}; try{ saved=JSON.parse(localStorage.getItem(KEY)||'{}')||{}; }catch(e){ saved={}; }
+const state={
+  scene: SCENES.some(s=>s.id===saved.scene)?saved.scene:'sea',
+  master: saved.master ?? 40,
+  length: saved.length ?? 30,          // 分鐘，0 = 整晚
+  fade: { on: saved.fade?.on ?? true, dur: saved.fade?.dur ?? 30 },
+  variation: saved.variation ?? 55,
+  output: saved.output || 'speaker',
+  mixes: {},
+  layers: [],
+};
+function loadMix(id){
+  const m=saved.mixes?.[id];
+  if(Array.isArray(m)&&m.length&&m.every(l=>CAT[l.type])) return m.map(l=>({...l,uid:'L'+(uidSeq++),solo:false}));
+  return sceneLayers(id);
 }
-`;
-
-// ── Compile & link ───────────────────────────────────────────────────────────
-const mkShader = (type, src) => {
-	const s = gl.createShader(type);
-	gl.shaderSource(s, src);
-	gl.compileShader(s);
-	if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
-		console.error(gl.getShaderInfoLog(s));
-		gl.deleteShader(s);
-		return null;
-	}
-	return s;
-};
-
-const vert = mkShader(gl.VERTEX_SHADER, VS);
-const frag = mkShader(gl.FRAGMENT_SHADER, FS);
-const prog = gl.createProgram();
-gl.attachShader(prog, vert);
-gl.attachShader(prog, frag);
-gl.linkProgram(prog);
-
-if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
-	console.error(gl.getProgramInfoLog(prog));
-	throw new Error("Program linking failed");
+state.layers=loadMix(state.scene);
+let saveT=null;
+function save(){
+  clearTimeout(saveT);
+  saveT=setTimeout(()=>{
+    saved.mixes=saved.mixes||{};
+    saved.mixes[state.scene]=state.layers.map(({uid,solo,...r})=>r);
+    Object.assign(saved,{scene:state.scene,master:state.master,length:state.length,fade:state.fade,variation:state.variation,output:state.output});
+    try{ localStorage.setItem(KEY,JSON.stringify(saved)); }catch(e){}
+  },300);
 }
 
-gl.useProgram(prog);
-gl.disable(gl.DEPTH_TEST);
-gl.disable(gl.CULL_FACE);
-gl.disable(gl.BLEND);
-gl.disable(gl.DITHER);
+/* =========================================================
+   音訊引擎：單一 AudioContext
+   bus → limiter → master → fade → env → out → destination
+   ========================================================= */
+const E={ctx:null,buf:{},strips:new Map(),mode:'idle',sessionStart:0,stopTimer:null,level:0};
 
-const buf = gl.createBuffer();
-gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-gl.bufferData(
-	gl.ARRAY_BUFFER,
-	new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]),
-	gl.STATIC_DRAW
-);
+function makeBuffer(kind,seconds){
+  const c=E.ctx, sr=c.sampleRate, N=Math.floor(sr*seconds), F=Math.floor(sr*.5);
+  const buf=c.createBuffer(2,N,sr);
+  for(let ch=0;ch<2;ch++){
+    const tmp=new Float32Array(N+F);
+    let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0,last=0;
+    for(let i=0;i<N+F;i++){
+      const w=Math.random()*2-1; let v;
+      if(kind==='white') v=w;
+      else if(kind==='pink'){
+        b0=.99886*b0+w*.0555179; b1=.99332*b1+w*.0750759; b2=.969*b2+w*.153852;
+        b3=.8665*b3+w*.3104856; b4=.55*b4+w*.5329522; b5=-.7616*b5-w*.016898;
+        v=b0+b1+b2+b3+b4+b5+b6+w*.5362; b6=w*.115926;
+      } else { last=(last+.02*w)/1.02; v=last; }
+      tmp[i]=v;
+    }
+    const d=buf.getChannelData(ch);
+    d.set(tmp.subarray(0,N));
+    for(let i=0;i<F;i++){ const a=i/F; d[i]=tmp[i]*Math.sqrt(a)+tmp[N+i]*Math.sqrt(1-a); } // 無縫循環
+    let mean=0; for(let i=0;i<N;i++) mean+=d[i]; mean/=N;
+    let sq=0; for(let i=0;i<N;i++){ d[i]-=mean; sq+=d[i]*d[i]; }
+    const k=.18/Math.sqrt(sq/N);
+    for(let i=0;i<N;i++) d[i]=clamp(d[i]*k,-1,1);
+  }
+  return buf;
+}
 
-const ap = gl.getAttribLocation(prog, "a");
-gl.enableVertexAttribArray(ap);
-gl.vertexAttribPointer(ap, 2, gl.FLOAT, false, 0, 0);
+function ensureCtx(){
+  if(E.ctx) return;
+  const AC=window.AudioContext||window.webkitAudioContext;
+  const c=E.ctx=new AC({latencyHint:'playback'});
+  E.buf.white=makeBuffer('white',11); E.buf.pink=makeBuffer('pink',13); E.buf.brown=makeBuffer('brown',17);
+  E.bus=c.createGain();
+  E.limiter=c.createDynamicsCompressor();
+  E.limiter.threshold.value=-16; E.limiter.knee.value=8; E.limiter.ratio.value=12; E.limiter.attack.value=.005; E.limiter.release.value=.3;
+  E.master=c.createGain(); E.fade=c.createGain(); E.env=c.createGain(); E.env.gain.value=0;
+  E.out=c.createGain(); E.analyser=c.createAnalyser(); E.analyser.fftSize=1024;
+  E.bus.connect(E.limiter).connect(E.master).connect(E.fade).connect(E.env).connect(E.out).connect(c.destination);
+  E.out.connect(E.analyser);
+  applyMaster(true); applyOutput();
+}
 
-const uR = gl.getUniformLocation(prog, "uR");
-const uTi = gl.getUniformLocation(prog, "uT");
-const uScroll = gl.getUniformLocation(prog, "uS");
-const uScene = gl.getUniformLocation(prog, "uSc");
-const uBlend = gl.getUniformLocation(prog, "uBl");
-const uLtFlash = gl.getUniformLocation(prog, "uLtF");
-const uLtSlot = gl.getUniformLocation(prog, "uLtS");
+function makeKit(out){
+  const c=E.ctx, srcs=[];
+  return {
+    ctx:c, out, now:()=>c.currentTime, srcs,
+    noise(kind,rate=1){ const s=c.createBufferSource(); s.buffer=E.buf[kind]; s.loop=true; s.playbackRate.value=rate*rnd(.996,1.004); s.start(c.currentTime,rnd(0,s.buffer.duration*.95)); srcs.push(s); return s; },
+    osc(type,f){ const o=c.createOscillator(); o.type=type; o.frequency.value=f; o.start(); srcs.push(o); return o; },
+    gain(v){ const g=c.createGain(); g.gain.value=v; return g; },
+    filter(type,f,q){ const b=c.createBiquadFilter(); b.type=type; b.frequency.value=f; b.Q.value=q; return b; },
+    panner(p){ const s=c.createStereoPanner(); s.pan.value=p; return s; },
+    delay(t){ const d=c.createDelay(1); d.delayTime.value=t; return d; },
+  };
+}
 
-// ── Renderer config ──────────────────────────────────────────────────────────
-const MAX_DPR = 1.5;
-const QUALITY_MIN = 0.82;
-const QUALITY_MAX = 1.0;
-const QUALITY_STEP_DN = 0.06;
-const QUALITY_STEP_UP = 0.04;
-const FPS_LOW = 50;
-const FPS_HIGH = 57;
-const FPS_EVAL_WINDOW = 0.75;
-const FPS_LOW_GRACE = 1.5;
-const FPS_HIGH_GRACE = 3.0;
-const SCROLL_EASE = 0.1;
-const VELOCITY_MAX = 520;
-const VELOCITY_DAMPING = 0.86;
-const VELOCITY_CUTOFF = 0.02;
-const SMOOTH_SPEED = 8;
-const DT_MAX = 0.05;
-const NIGHT_SCRIM_LO = 0.583;
-const NIGHT_SCRIM_SPAN = 0.25;
-const SCRIM_BASE = 0.18;
-const SCRIM_PEAK = 0.56;
-const COLOR_ALPHA_HUD = 0.8;
-const COLOR_ALPHA_DOT = 0.3;
-const COLOR_ALPHA_DOTA = 0.92;
+function makeStrip(layer){
+  const c=E.ctx, s={layer};
+  s.input=c.createGain(); s.input.channelCount=2; s.input.channelCountMode='explicit';
+  s.low=c.createBiquadFilter(); s.low.type='lowshelf'; s.low.frequency.value=220;
+  s.high=c.createBiquadFilter(); s.high.type='highshelf'; s.high.frequency.value=3200;
+  s.split=c.createChannelSplitter(2); s.merge=c.createChannelMerger(2);
+  ['ll','lr','rl','rr'].forEach(n=>s[n]=c.createGain());
+  s.pan=c.createStereoPanner(); s.vol=c.createGain(); s.env=c.createGain(); s.env.gain.value=0;
+  s.input.connect(s.low).connect(s.high).connect(s.split);
+  s.split.connect(s.ll,0); s.ll.connect(s.merge,0,0);
+  s.split.connect(s.rl,1); s.rl.connect(s.merge,0,0);
+  s.split.connect(s.rr,1); s.rr.connect(s.merge,0,1);
+  s.split.connect(s.lr,0); s.lr.connect(s.merge,0,1);
+  s.merge.connect(s.pan).connect(s.vol).connect(s.env).connect(E.bus);
+  s.kit=makeKit(s.input);
+  s.mod=CAT[layer.type].build(s.kit);
+  applyStrip(s,true);
+  const t=c.currentTime; s.env.gain.setValueAtTime(0,t); s.env.gain.linearRampToValueAtTime(1,t+2.5);
+  return s;
+}
 
-const NAMES = ["DAWN", "MIDDAY", "DUSK", "STORM", "NIGHT", "PRE-DAWN"];
-const N = NAMES.length;
+function applyStrip(s,instant){
+  const L=s.layer, t=E.ctx.currentTime, tau=instant?.001:.08;
+  const soloing=state.layers.some(x=>x.solo);
+  const audible=!L.mute&&(!soloing||L.solo);
+  s.vol.gain.setTargetAtTime(audible?Math.pow(L.vol/100,2)*CAT[L.type].gain:0,t,tau);
+  s.low.gain.setTargetAtTime(L.low,t,tau);
+  s.high.gain.setTargetAtTime(L.high,t,tau);
+  const m=state.output;
+  const w=m==='mono'?0:(L.width/100)*(m==='speaker'?.7:1);
+  const a=(1+w)/2, b=(1-w)/2;
+  s.ll.gain.setTargetAtTime(a,t,tau); s.rr.gain.setTargetAtTime(a,t,tau);
+  s.lr.gain.setTargetAtTime(b,t,tau); s.rl.gain.setTargetAtTime(b,t,tau);
+  s.pan.pan.setTargetAtTime(m==='mono'?0:(L.pan/100)*(m==='speaker'?.8:1),t,tau);
+}
 
-let maxScroll = 1,
-	tgt = 0,
-	smooth = 0,
-	velocity = 0;
-let qualityScale = QUALITY_MAX;
-let resizeRAF = 0,
-	lastVH = 0;
+function destroyStrip(s,fadeSec=2.5){
+  const t=E.ctx.currentTime;
+  s.env.gain.cancelScheduledValues(t); s.env.gain.setValueAtTime(s.env.gain.value,t); s.env.gain.linearRampToValueAtTime(0,t+fadeSec);
+  setTimeout(()=>{ s.kit.srcs.forEach(x=>{try{x.stop()}catch(e){}}); try{s.env.disconnect()}catch(e){} },fadeSec*1000+200);
+}
 
-const updateScrollMetrics = () => {
-	const vh = lastVH || window.innerHeight;
-	maxScroll = Math.max(0, document.documentElement.scrollHeight - vh);
-	tgt = maxScroll > 0 ? Math.min(1, Math.max(0, window.scrollY / maxScroll)) : 0;
-};
+function syncStrips(){
+  if(E.mode==='idle'||E.mode==='stopping') return;
+  const want=new Set(state.layers.map(l=>l.uid));
+  for(const [uid,s] of E.strips) if(!want.has(uid)){ destroyStrip(s,3); E.strips.delete(uid); }
+  for(const l of state.layers) if(!E.strips.has(l.uid)) E.strips.set(l.uid,makeStrip(l));
+  E.strips.forEach(s=>applyStrip(s));
+}
+const applyAll=()=>{ if(E.ctx) E.strips.forEach(s=>applyStrip(s)); };
 
-const resize = () => {
-	resizeRAF = 0;
-	const vp = window.visualViewport ?? {
-		width: window.innerWidth,
-		height: window.innerHeight
-	};
-	const cssW = Math.round(vp.width);
-	const cssH = Math.round(vp.height);
-	if (!cssW || !cssH) return;
-	lastVH = cssH;
-	const dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR);
-	const scale = dpr * qualityScale;
-	const pixelW = Math.max(1, Math.round(cssW * scale));
-	const pixelH = Math.max(1, Math.round(cssH * scale));
-	canvas.style.width = `${cssW}px`;
-	canvas.style.height = `${cssH}px`;
-	if (canvas.width !== pixelW || canvas.height !== pixelH) {
-		canvas.width = pixelW;
-		canvas.height = pixelH;
-		gl.viewport(0, 0, pixelW, pixelH);
-		gl.uniform2f(uR, pixelW, pixelH);
-	}
-	updateScrollMetrics();
-};
+function applyMaster(instant){
+  if(!E.ctx) return;
+  E.master.gain.setTargetAtTime(Math.pow(state.master/100,1.6)*2.2,E.ctx.currentTime,instant?.001:.08);
+}
+function applyOutput(){
+  if(!E.ctx) return;
+  const mono=state.output==='mono';
+  E.out.channelCount=mono?1:2; E.out.channelCountMode='explicit'; E.out.channelInterpretation='speakers';
+  applyAll();
+}
 
-const requestResize = () => {
-	if (!resizeRAF) resizeRAF = requestAnimationFrame(resize);
-};
-resize();
-window.addEventListener("resize", requestResize, { passive: true });
-window.visualViewport?.addEventListener("resize", requestResize, { passive: true });
-window.addEventListener("scroll", updateScrollMetrics, { passive: true });
-window.addEventListener("load", updateScrollMetrics, { passive: true });
+/* ---------- 計時與漸弱 ---------- */
+function plan(){
+  const L=state.length, f=state.fade;
+  if(!f.on) return {end:L?L*60:Infinity,fadeStart:Infinity,fadeDur:0};
+  if(L){ const fd=Math.min(f.dur,Math.max(L-3,L*.6)); return {end:L*60,fadeStart:(L-fd)*60,fadeDur:fd*60}; }
+  return {end:(10+f.dur)*60,fadeStart:600,fadeDur:f.dur*60};
+}
+function fadeVal(p){ if(p<=0) return 1; if(p>=1) return 0; return Math.pow(.5*(1+Math.cos(Math.PI*p)),1.5); }
+const elapsed=()=>E.ctx&&E.mode!=='idle'?E.ctx.currentTime-E.sessionStart:0;
 
-// ── Wheel ────────────────────────────────────────────────────────────────────
-const WHEEL_LINE_PX = 16;
-const WHEEL_PAGE_FRAC = 0.9;
+/* ---------- 傳輸控制 ---------- */
+async function play(){
+  ensureCtx();
+  if(E.mode==='paused'){
+    await E.ctx.resume(); E.mode='playing';
+    E.env.gain.cancelScheduledValues(E.ctx.currentTime); E.env.gain.setTargetAtTime(1,E.ctx.currentTime,.3);
+    updateUI(); return;
+  }
+  if(E.mode!=='idle') return;
+  await E.ctx.resume();
+  const t=E.ctx.currentTime;
+  E.sessionStart=t; E.mode='playing';
+  E.fade.gain.setValueAtTime(1,t);
+  E.env.gain.cancelScheduledValues(t); E.env.gain.setValueAtTime(0,t); E.env.gain.linearRampToValueAtTime(1,t+4);
+  syncStrips(); tick();
+}
+function pause(){
+  if(E.mode!=='playing') return;
+  E.mode='paused';
+  E.env.gain.setTargetAtTime(0,E.ctx.currentTime,.12);
+  setTimeout(()=>{ if(E.mode==='paused') E.ctx.suspend(); },600);
+  updateUI();
+}
+function stop(){
+  if(E.mode==='idle'||E.mode==='stopping') return;
+  const wasPaused=E.mode==='paused';
+  E.mode='stopping'; updateUI();
+  const finish=()=>{ E.strips.forEach(s=>destroyStrip(s,.05)); E.strips.clear(); setTimeout(()=>{ E.ctx.suspend(); E.mode='idle'; updateUI(); },150); };
+  if(wasPaused){ finish(); return; }
+  const t=E.ctx.currentTime;
+  E.env.gain.cancelScheduledValues(t); E.env.gain.setValueAtTime(E.env.gain.value,t); E.env.gain.linearRampToValueAtTime(0,t+5);
+  setTimeout(finish,5200);
+}
 
-window.addEventListener(
-	"wheel",
-	(e) => {
-		if (e.ctrlKey || e.metaKey) return;
-		e.preventDefault();
-		const pagePx = window.innerHeight * WHEEL_PAGE_FRAC;
-		const delta =
-			e.deltaMode === 1
-				? e.deltaY * WHEEL_LINE_PX
-				: e.deltaMode === 2
-				? e.deltaY * pagePx
-				: e.deltaY;
+function tick(){
+  if(E.mode==='playing'){
+    const now=E.ctx.currentTime, el=now-E.sessionStart, P=plan();
+    const v=P.fadeDur?fadeVal((el-P.fadeStart)/P.fadeDur):1;
+    E.fade.gain.setTargetAtTime(v,now,.5);
+    const d=state.variation/100;
+    E.strips.forEach(s=>{ try{ s.mod.tick(now,d); }catch(e){} });
+    if(el>=P.end) stop();
+  }
+  updateUI();
+}
+setInterval(tick,200);
 
-		// Loop: at the very end, scrolling further wraps back to dawn.
-		// PRE-DAWN now ends with the sun just under the left horizon, where DAWN begins.
-		if (delta > 0 && window.scrollY >= maxScroll - 2) {
-			velocity = 0;
-			smooth = 0;
-			tgt = 0;
-			window.scrollTo({ top: 0, behavior: "auto" });
-			return;
-		}
-
-		velocity += delta;
-		velocity = Math.max(-VELOCITY_MAX, Math.min(VELOCITY_MAX, velocity));
-	},
-	{ passive: false }
-);
-
-// ── HUD ──────────────────────────────────────────────────────────────────────
-const progFill = document.getElementById("prog_fill");
-const hudPct = document.getElementById("hud_pct");
-const sceneName = document.getElementById("scene_name");
-const dots = document.querySelectorAll(".scene-dot");
-
-let lastHUDPct = -1,
-	lastHUDScene = -1;
-
-const updateHUD = (s) => {
-	const p = Math.round(s * 100);
-	// Section i sits at s = i/(N-1), so round to the nearest one
-	const si = Math.min(N - 1, Math.max(0, Math.round(s * (N - 1))));
-	if (p !== lastHUDPct) {
-		lastHUDPct = p;
-		hudPct.textContent = String(p).padStart(3, "0") + "%";
-		progFill.style.width = `${p}%`;
-	}
-	if (si !== lastHUDScene) {
-		lastHUDScene = si;
-		sceneName.textContent = NAMES[si];
-		dots.forEach((d, i) => d.classList.toggle("active", i === si));
-	}
-};
-
-// ── Intersection reveal ───────────────────────────────────────────────────────
-const REVEAL_THRESHOLD = 0.15;
-const REVEAL_MARGIN = "-8%";
-
-const revealEls = [
-	...document.querySelectorAll(".scene-title, .scene-desc, .h-line")
+/* =========================================================
+   介面
+   ========================================================= */
+const PARAMS=[
+  {k:'vol',  label:'音量',min:0,  max:100,center:0,fmt:v=>v+'%'},
+  {k:'low',  label:'低頻',min:-12,max:12, center:0,fmt:v=>(v>0?'+':v<0?'−':'')+Math.abs(v)+' dB'},
+  {k:'high', label:'高頻',min:-12,max:12, center:0,fmt:v=>(v>0?'+':v<0?'−':'')+Math.abs(v)+' dB'},
+  {k:'width',label:'空間',min:0,  max:100,center:0,fmt:v=>v+'%'},
+  {k:'pan',  label:'方位',min:-100,max:100,center:0,fmt:v=>v===0?'置中':v<0?'左 '+(-v):'右 '+v},
 ];
-const io = new IntersectionObserver(
-	(entries) => {
-		for (const entry of entries) {
-			if (entry.isIntersecting) {
-				entry.target.classList.add("visible");
-				io.unobserve(entry.target);
-			}
-		}
-	},
-	{ threshold: REVEAL_THRESHOLD, rootMargin: `0px 0px ${REVEAL_MARGIN} 0px` }
-);
-for (const el of revealEls) io.observe(el);
+function paintRange(el,center){
+  const min=+el.min,max=+el.max,v=+el.value,pc=x=>((x-min)/(max-min)*100)+'%';
+  const c=center??min; el.style.setProperty('--a',pc(Math.min(c,v))); el.style.setProperty('--b',pc(Math.max(c,v)));
+}
+const fmtT=s=>{ s=Math.max(0,Math.floor(s)); const h=Math.floor(s/3600), m=Math.floor(s%3600/60), ss=s%60; return (h?h+':'+String(m).padStart(2,'0'):String(m).padStart(2,'0'))+':'+String(ss).padStart(2,'0'); };
 
-// ── Performance adaptation ───────────────────────────────────────────────────
-let fpsAccum = 0,
-	fpsFrames = 0,
-	lowFpsTime = 0,
-	highFpsTime = 0;
-const maybeAdjustQuality = (dt) => {
-	fpsAccum += dt;
-	fpsFrames++;
-	if (fpsAccum < FPS_EVAL_WINDOW) return;
-	const fps = fpsFrames / fpsAccum;
-	fpsAccum = fpsFrames = 0;
-	if (fps < FPS_LOW) {
-		lowFpsTime += FPS_EVAL_WINDOW;
-		highFpsTime = 0;
-	} else if (fps > FPS_HIGH) {
-		highFpsTime += FPS_EVAL_WINDOW;
-		lowFpsTime = 0;
-	} else {
-		lowFpsTime = 0;
-		highFpsTime = 0;
-	}
-	if (lowFpsTime >= FPS_LOW_GRACE && qualityScale > QUALITY_MIN) {
-		qualityScale = Math.max(QUALITY_MIN, +(qualityScale - QUALITY_STEP_DN).toFixed(2));
-		lowFpsTime = 0;
-		requestResize();
-	}
-	if (highFpsTime >= FPS_HIGH_GRACE && qualityScale < QUALITY_MAX) {
-		qualityScale = Math.min(QUALITY_MAX, +(qualityScale + QUALITY_STEP_UP).toFixed(2));
-		highFpsTime = 0;
-		requestResize();
-	}
-};
-
-// ── Scene text color palette ─────────────────────────────────────────────────
-const SCENE_COLORS = [
-	[255, 185, 80],  // DAWN     — warm gold
-	[210, 235, 255], // MIDDAY   — cool sky white
-	[255, 175, 80],  // DUSK     — amber-orange
-	[180, 188, 205], // STORM    — cold grey-white
-	[110, 138, 225], // NIGHT    — blue-indigo moonlight
-	[150, 140, 185]  // PRE-DAWN — dusty lavender
-];
-
-const lerpColor = (a, b, t) => [
-	Math.round(a[0] + (b[0] - a[0]) * t),
-	Math.round(a[1] + (b[1] - a[1]) * t),
-	Math.round(a[2] + (b[2] - a[2]) * t)
-];
-
-const getSceneColor = (s) => {
-	const raw = s * (SCENE_COLORS.length - 1);
-	const i = Math.min(Math.floor(raw), SCENE_COLORS.length - 2);
-	return lerpColor(SCENE_COLORS[i], SCENE_COLORS[i + 1], raw - i);
-};
-
-const root = document.documentElement;
-const applySceneColor = (s) => {
-	const [r, g, b] = getSceneColor(s);
-	root.style.setProperty("--fg", `rgb(${r},${g},${b})`);
-	root.style.setProperty("--fg-hud", `rgba(${r},${g},${b},${COLOR_ALPHA_HUD})`);
-	root.style.setProperty("--fg-dot", `rgba(${r},${g},${b},${COLOR_ALPHA_DOT})`);
-	root.style.setProperty("--fg-dotact", `rgba(${r},${g},${b},${COLOR_ALPHA_DOTA})`);
-};
-
-// ── Shared helpers ───────────────────────────────────────────────────────────
-const fract = (x) => x - Math.floor(x);
-const lerp = (a, b, t) => a + (b - a) * t;
-const sstep = (e0, e1, x) => {
-	const t = Math.min(1, Math.max(0, (x - e0) / (e1 - e0)));
-	return t * t * (3 - 2 * t);
-};
-const hash2 = (x, y) => fract(Math.sin(x * 127.1 + y * 311.7) * 43758.5453123);
-
-// ── Lightning timing (drives both the shader flash and thunder audio) ───────
-const LT_RATE = 0.28; // flash slots per second
-const LT_PROB = 0.3; // fraction of slots that fire
-const LT_DECAY = 9.0; // flash decay
-
-const lightningAt = (t) => {
-	const slot = Math.floor(t * LT_RATE);
-	const phase = fract(t * LT_RATE);
-	const fire1 = hash2(slot, 17.31) >= 1 - LT_PROB;
-	const fire2 = hash2(slot, 5.77) >= 1 - LT_PROB * 0.5;
-	const flash =
-		(fire1 ? Math.exp(-phase * LT_DECAY) : 0) +
-		(fire2 ? Math.exp(-Math.max(0, phase - 0.12) * LT_DECAY) * 0.55 : 0);
-	return { slot, flash, fire1, fire2 };
-};
-
-// ── Ocean audio (procedural, Web Audio — no audio files) ────────────────────
-const AUDIO_SCENES = [
-	// vol, wave period (s), surf lowpass (Hz), foam hiss, low rumble, wind
-	{ vol: 0.55, period: 7.5, cutoff: 900, foam: 0.4, rumble: 0.35, wind: 0.0 }, // DAWN
-	{ vol: 0.6, period: 6.5, cutoff: 1100, foam: 0.5, rumble: 0.3, wind: 0.0 }, // MIDDAY
-	{ vol: 0.62, period: 6.2, cutoff: 950, foam: 0.55, rumble: 0.4, wind: 0.05 }, // DUSK
-	{ vol: 0.95, period: 4.4, cutoff: 1600, foam: 1.0, rumble: 0.9, wind: 0.55 }, // STORM
-	{ vol: 0.42, period: 9.0, cutoff: 700, foam: 0.25, rumble: 0.35, wind: 0.0 }, // NIGHT
-	{ vol: 0.36, period: 9.5, cutoff: 650, foam: 0.2, rumble: 0.3, wind: 0.0 } // PRE-DAWN
-];
-const AUDIO_MASTER = 0.6; // overall volume
-const AUDIO_FADE = 1.2; // seconds to fade in / out
-const NOISE_SECONDS = 8;
-const NOISE_XFADE = 0.25; // seconds crossfaded so the loop is seamless
-
-const sceneAudio = (sc) => {
-	const i = Math.min(Math.max(0, Math.floor(sc)), AUDIO_SCENES.length - 2);
-	const t = Math.min(1, Math.max(0, sc - i));
-	const a = AUDIO_SCENES[i],
-		b = AUDIO_SCENES[i + 1];
-	const o = {};
-	for (const k in a) o[k] = lerp(a[k], b[k], t);
-	return o;
-};
-
-const ocean = (() => {
-	let ctx = null,
-		master,
-		noiseBuf,
-		rumbleGain,
-		windGain,
-		windFilter,
-		thunderBus;
-	const layers = [];
-	const phases = [0, 0.37]; // two swell trains, offset so they don't crash together
-	let enabled = false;
-
-	// Pink noise (Paul Kellet filter) with a crossfaded tail for seamless looping
-	const makeNoise = () => {
-		const sr = ctx.sampleRate;
-		const len = Math.floor(sr * NOISE_SECONDS);
-		const buf = ctx.createBuffer(1, len, sr);
-		const d = buf.getChannelData(0);
-		let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
-		for (let i = 0; i < len; i++) {
-			const w = Math.random() * 2 - 1;
-			b0 = 0.99886 * b0 + w * 0.0555179;
-			b1 = 0.99332 * b1 + w * 0.0750759;
-			b2 = 0.969 * b2 + w * 0.153852;
-			b3 = 0.8665 * b3 + w * 0.3104856;
-			b4 = 0.55 * b4 + w * 0.5329522;
-			b5 = -0.7616 * b5 - w * 0.016898;
-			d[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + w * 0.5362) * 0.11;
-			b6 = w * 0.115926;
-		}
-		const xf = Math.floor(sr * NOISE_XFADE);
-		for (let i = 0; i < xf; i++) {
-			const t = i / xf;
-			d[len - xf + i] = d[len - xf + i] * (1 - t) + d[i] * t;
-		}
-		return buf;
-	};
-
-	const loopNoise = () => {
-		const s = ctx.createBufferSource();
-		s.buffer = noiseBuf;
-		s.loop = true;
-		s.loopStart = NOISE_XFADE;
-		s.loopEnd = noiseBuf.duration;
-		s.start(0, NOISE_XFADE + Math.random() * (noiseBuf.duration - NOISE_XFADE - 0.5));
-		return s;
-	};
-
-	const filter = (type, freq, Q = 0.7) => {
-		const f = ctx.createBiquadFilter();
-		f.type = type;
-		f.frequency.value = freq;
-		f.Q.value = Q;
-		return f;
-	};
-
-	const gain = (v = 0) => {
-		const g = ctx.createGain();
-		g.gain.value = v;
-		return g;
-	};
-
-	const build = () => {
-		noiseBuf = makeNoise();
-
-		master = gain(0);
-		const comp = ctx.createDynamicsCompressor();
-		comp.threshold.value = -14;
-		comp.ratio.value = 4;
-		master.connect(comp).connect(ctx.destination);
-
-		// Two surf layers, panned left/right, each with a foam hiss on the crash
-		for (const pan of [-0.55, 0.55]) {
-			const p = ctx.createStereoPanner();
-			p.pan.value = pan;
-			p.connect(master);
-
-			const lp = filter("lowpass", 800);
-			const g = gain();
-			loopNoise().connect(lp).connect(g).connect(p);
-
-			const bp = filter("bandpass", 2800, 0.6);
-			const fg = gain();
-			loopNoise().connect(bp).connect(fg).connect(p);
-
-			layers.push({ lp, g, fg });
-		}
-
-		// Deep, steady sea rumble
-		rumbleGain = gain();
-		loopNoise().connect(filter("lowpass", 160)).connect(rumbleGain).connect(master);
-
-		// Storm wind
-		windFilter = filter("bandpass", 600, 2.5);
-		windGain = gain();
-		loopNoise().connect(windFilter).connect(windGain).connect(master);
-
-		thunderBus = gain(1);
-		thunderBus.connect(master);
-	};
-
-	const update = (dt, sc) => {
-		if (!ctx || !enabled || ctx.state !== "running") return;
-		const p = sceneAudio(sc);
-		const now = ctx.currentTime;
-		const tc = 0.08;
-
-		layers.forEach((L, i) => {
-			const period = p.period * (i ? 1.27 : 1);
-			phases[i] = (phases[i] + dt / period) % 1;
-			const f = phases[i];
-			// build-up → crash at 60% → long wash back out
-			const env = f < 0.6 ? Math.pow(sstep(0, 0.6, f), 2) : Math.exp(-(f - 0.6) * 6);
-			const crash = sstep(0.52, 0.6, f) * Math.exp(-Math.max(0, f - 0.6) * 9);
-			L.g.gain.setTargetAtTime(p.vol * (0.22 + 0.78 * env), now, tc);
-			L.lp.frequency.setTargetAtTime(p.cutoff * (0.55 + 0.75 * env), now, tc);
-			L.fg.gain.setTargetAtTime(p.vol * p.foam * crash * 0.55, now, tc);
-		});
-
-		rumbleGain.gain.setTargetAtTime(p.rumble * 0.8, now, 0.3);
-		const gust = 0.6 + 0.4 * Math.sin(now * 0.37) * Math.sin(now * 0.23);
-		windGain.gain.setTargetAtTime(p.wind * gust, now, 0.3);
-		windFilter.frequency.setTargetAtTime(550 + 300 * Math.sin(now * 0.31), now, 0.2);
-	};
-
-	// Thunder arrives a moment after the flash (sound travels slower than light)
-	const thunder = (intensity) => {
-		if (!ctx || !enabled || ctx.state !== "running") return;
-		const t = ctx.currentTime + 0.4 + Math.random() * 1.2;
-		const dur = 5;
-		const peak = 1.6 * intensity;
-
-		const src = ctx.createBufferSource();
-		src.buffer = noiseBuf;
-		const lp = filter("lowpass", 1200);
-		lp.frequency.setValueAtTime(1200, t);
-		lp.frequency.exponentialRampToValueAtTime(70, t + 3);
-
-		const g = gain(0.0001);
-		g.gain.setValueAtTime(0.0001, t);
-		g.gain.exponentialRampToValueAtTime(Math.max(0.001, peak), t + 0.06);
-		// rolling rumble: a few uneven swells as it decays
-		for (let k = 1; k <= 8; k++) {
-			const v = peak * Math.exp(-k * 0.35) * (0.6 + 0.8 * Math.random());
-			g.gain.exponentialRampToValueAtTime(Math.max(0.001, v), t + 0.06 + k * 0.28);
-		}
-		g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-
-		const pan = ctx.createStereoPanner();
-		pan.pan.value = (Math.random() - 0.5) * 1.2;
-
-		src.connect(lp).connect(g).connect(pan).connect(thunderBus);
-		src.start(t, Math.random() * (noiseBuf.duration - dur - 0.5));
-		src.stop(t + dur + 0.2);
-	};
-
-	const toggle = () => {
-		if (!ctx) {
-			const AC = window.AudioContext || window.webkitAudioContext;
-			if (!AC) return false;
-			ctx = new AC();
-			build();
-		}
-		enabled = !enabled;
-		const now = ctx.currentTime;
-		if (enabled) ctx.resume();
-		master.gain.cancelScheduledValues(now);
-		master.gain.setValueAtTime(master.gain.value, now);
-		master.gain.setTargetAtTime(enabled ? AUDIO_MASTER : 0, now, AUDIO_FADE / 3);
-		if (!enabled) {
-			setTimeout(() => {
-				if (!enabled) ctx.suspend();
-			}, AUDIO_FADE * 1000 + 200);
-		}
-		return enabled;
-	};
-
-	document.addEventListener("visibilitychange", () => {
-		if (!ctx || !enabled) return;
-		if (document.hidden) ctx.suspend();
-		else ctx.resume();
-	});
-
-	return { toggle, update, thunder };
-})();
-
-// ── Sound toggle UI ──────────────────────────────────────────────────────────
-const soundBtn = document.getElementById("sound_btn");
-const soundLabel = document.getElementById("sound_label");
-const onSoundToggle = () => {
-	const on = ocean.toggle();
-	soundBtn.classList.toggle("on", on);
-	soundBtn.setAttribute("aria-pressed", String(on));
-	soundLabel.textContent = on ? "Sound on" : "Sound off";
-};
-soundBtn.addEventListener("click", onSoundToggle);
-window.addEventListener("keydown", (e) => {
-	if ((e.key === "m" || e.key === "M") && !e.ctrlKey && !e.metaKey && !e.altKey) onSoundToggle();
+function renderScenes(){
+  $('scenes').innerHTML=SCENES.map(s=>`<button class="scene" data-id="${s.id}" aria-pressed="${s.id===state.scene}"><i>${s.tag}</i><b>${s.name}</b><span>${s.line}</span></button>`).join('');
+}
+$('scenes').addEventListener('click',e=>{
+  const b=e.target.closest('.scene'); if(!b||b.dataset.id===state.scene) return;
+  save(); // 先存目前場景
+  state.scene=b.dataset.id; state.layers=loadMix(state.scene);
+  if(SCENES.find(s=>s.id===state.scene).fade) state.fade.on=true;
+  renderScenes(); renderLayers(); renderTimer(); syncStrips(); save();
 });
 
-// ── Render loop ──────────────────────────────────────────────────────────────
-let lastLtSlot = -1;
-const t0 = performance.now();
-let lastNow = t0;
+function renderLayers(){
+  const soloing=state.layers.some(x=>x.solo);
+  $('layers').innerHTML=state.layers.map(l=>{
+    const c=CAT[l.type], silent=l.mute||(soloing&&!l.solo);
+    return `<div class="layer${silent?' silent':''}" data-uid="${l.uid}">
+      <div class="lhead"><span class="lname">${c.name}</span><span class="ldesc">${c.desc}</span>
+        <div class="lbtns">
+          <button class="chip" data-act="solo" aria-pressed="${l.solo}">單獨聽</button>
+          <button class="chip" data-act="mute" aria-pressed="${l.mute}">靜音</button>
+          <button class="chip" data-act="remove" aria-label="移除${c.name}">移除</button>
+        </div></div>
+      <div class="params">${PARAMS.map(p=>`<label class="param" for="${l.uid}-${p.k}"><span class="top"><span>${p.label}</span><output>${p.fmt(l[p.k])}</output></span>
+        <input type="range" id="${l.uid}-${p.k}" data-k="${p.k}" min="${p.min}" max="${p.max}" step="1" value="${l[p.k]}"></label>`).join('')}</div>
+    </div>`;
+  }).join('') || '<p class="hint" style="padding:16px 0">這個場景目前沒有聲音，從下方加入一個。</p>';
+  $('layers').querySelectorAll('input[type=range]').forEach(el=>paintRange(el,PARAMS.find(p=>p.k===el.dataset.k).center===0&&+el.min<0?0:null));
+  $('addLayer').innerHTML='<option value="">選擇聲源…</option>'+Object.entries(CAT).map(([k,c])=>`<option value="${k}">${c.name}</option>`).join('');
+}
+$('layers').addEventListener('input',e=>{
+  const el=e.target; if(el.type!=='range') return;
+  const uid=el.closest('.layer').dataset.uid, L=state.layers.find(l=>l.uid===uid), p=PARAMS.find(p=>p.k===el.dataset.k);
+  L[p.k]=+el.value; el.parentElement.querySelector('output').textContent=p.fmt(L[p.k]);
+  paintRange(el,+el.min<0?0:null);
+  const s=E.strips.get(uid); if(s) applyStrip(s);
+  save();
+});
+$('layers').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-act]'); if(!b) return;
+  const uid=b.closest('.layer').dataset.uid, L=state.layers.find(l=>l.uid===uid);
+  if(b.dataset.act==='remove') state.layers=state.layers.filter(l=>l.uid!==uid);
+  else L[b.dataset.act]=!L[b.dataset.act];
+  renderLayers(); syncStrips(); save();
+});
+$('addLayer').addEventListener('change',e=>{
+  if(!e.target.value) return;
+  state.layers.push(mkLayer(e.target.value)); renderLayers(); syncStrips(); save();
+});
+$('resetScene').addEventListener('click',()=>{ state.layers=sceneLayers(state.scene); renderLayers(); syncStrips(); save(); });
 
-const frame = (now) => {
-	requestAnimationFrame(frame);
-	const dt = Math.min((now - lastNow) / 1000, DT_MAX);
-	lastNow = now;
+/* 計時面板 */
+const LENGTHS=[[15,'15'],[30,'30'],[60,'60'],[90,'90'],[0,'整晚']];
+const DURS=[20,30,45,60];
+function renderTimer(){
+  $('lengthSeg').innerHTML=LENGTHS.map(([v,t])=>`<button data-v="${v}" aria-pressed="${state.length===v}">${t}${v?' 分':''}</button>`).join('');
+  $('durSeg').innerHTML=DURS.map(v=>`<button data-v="${v}" aria-pressed="${state.fade.dur===v}" ${state.fade.on?'':'disabled'}>${v} 分</button>`).join('');
+  $('fadeSwitch').setAttribute('aria-checked',state.fade.on);
+  const P=plan(), m=s=>Math.round(s/60);
+  let txt;
+  if(!state.fade.on) txt=state.length?`全程維持音量，<b>${state.length} 分鐘</b>時以 5 秒平滑停止。`:`<b>整晚播放</b>，不漸弱也不自動停止。`;
+  else txt=`維持音量 <b>${m(P.fadeStart)} 分鐘</b>，接著 <b>${m(P.fadeDur)} 分鐘</b>逐漸淡出，於 <b>${m(P.end)} 分鐘</b>停止。`+(state.length===0?'（整晚模式開啟漸弱時，固定先維持 10 分鐘）':'');
+  $('summary').innerHTML=txt;
+  drawCurve();
+}
+$('lengthSeg').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; state.length=+b.dataset.v; renderTimer(); save(); });
+$('durSeg').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b||b.disabled) return; state.fade.dur=+b.dataset.v; renderTimer(); save(); });
+$('fadeSwitch').addEventListener('click',()=>{ state.fade.on=!state.fade.on; renderTimer(); save(); });
 
-	maybeAdjustQuality(dt);
+function drawCurve(){
+  const P=plan(), W=300, x0=8, x1=292, y0=12, y1=66;
+  const total=isFinite(P.end)?P.end:7200;
+  const X=s=>x0+(x1-x0)*Math.min(s,total)/total, Y=v=>y1-(y1-y0)*v;
+  let d='';
+  for(let i=0;i<=120;i++){
+    const s=total*i/120, v=P.fadeDur?fadeVal((s-P.fadeStart)/P.fadeDur):1;
+    d+=(i?'L':'M')+X(s).toFixed(1)+' '+Y(v).toFixed(1);
+  }
+  const area=d+`L${x1} ${y1}L${x0} ${y1}Z`;
+  const el=elapsed(), px=X(el);
+  const ticks=[[0,'0']];
+  if(P.fadeDur) ticks.push([P.fadeStart,Math.round(P.fadeStart/60)+'']);
+  ticks.push([total,isFinite(P.end)?Math.round(P.end/60)+' 分':'整晚 →']);
+  $('curve').innerHTML=`
+    <line x1="${x0}" x2="${x1}" y1="${y1}" y2="${y1}" stroke="var(--line)"/>
+    <line x1="${x0}" x2="${x1}" y1="${y0}" y2="${y0}" stroke="var(--line)" stroke-dasharray="2 4"/>
+    <path d="${area}" fill="var(--tide)" fill-opacity=".14"/>
+    <path d="${d}" fill="none" stroke="var(--tide)" stroke-width="1.6"/>
+    ${ticks.map(([s,t],i)=>`<text x="${X(s)}" y="84" font-size="10" font-family="IBM Plex Mono, monospace" fill="var(--muted)" text-anchor="${i===0?'start':i===ticks.length-1?'end':'middle'}">${t}</text>`).join('')}
+    ${E.mode!=='idle'?`<line x1="${px}" x2="${px}" y1="${y0-4}" y2="${y1}" stroke="var(--accent)" stroke-width="1.5"/><circle cx="${px}" cy="${Y(P.fadeDur?fadeVal((el-P.fadeStart)/P.fadeDur):1)}" r="3.5" fill="var(--accent)"/>`:''}
+    <text x="${x0}" y="8" font-size="9.5" fill="var(--muted)" font-family="IBM Plex Mono, monospace">音量</text>`;
+}
 
-	velocity *= Math.pow(VELOCITY_DAMPING, dt * 60);
-	if (Math.abs(velocity) < VELOCITY_CUTOFF) velocity = 0;
-	if (velocity !== 0)
-		window.scrollBy({ top: velocity * SCROLL_EASE, behavior: "auto" });
+/* 變化與輸出 */
+const variation=$('variation');
+variation.value=state.variation; $('varOut').textContent=state.variation+'%';
+variation.addEventListener('input',()=>{ state.variation=+variation.value; $('varOut').textContent=variation.value+'%'; paintRange(variation); save(); });
+const OUTS=[['speaker','喇叭'],['headphone','耳機'],['mono','單聲道']];
+const OUTNOTE={speaker:'立體聲寬度與方位收斂到 70–80%，外放時聲音較集中、不易刺耳。',
+  headphone:'完整空間感：聲音可以明顯來自左右或遠方，適合戴耳機入睡。',
+  mono:'所有聲音合併成單一聲道，適合單顆藍牙喇叭；混音比例不會因此改變。'};
+function renderOut(){
+  $('outSeg').innerHTML=OUTS.map(([v,t])=>`<button data-v="${v}" aria-pressed="${state.output===v}">${t}</button>`).join('');
+  $('outNote').textContent=OUTNOTE[state.output];
+}
+$('outSeg').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; state.output=b.dataset.v; renderOut(); applyOutput(); save(); });
 
-	smooth += (tgt - smooth) * (1 - Math.exp(-dt * SMOOTH_SPEED));
+/* 總音量與傳輸 */
+const master=$('master');
+master.value=state.master; $('masterOut').textContent=state.master+'%';
+master.addEventListener('input',()=>{ state.master=+master.value; $('masterOut').textContent=master.value+'%'; paintRange(master); applyMaster(); save(); });
+$('play').addEventListener('click',()=>{ E.mode==='playing'?pause():play(); });
+$('stop').addEventListener('click',stop);
 
-	const raw = smooth * (N - 1);
-	const si = Math.min(Math.floor(raw), N - 2);
-	const bl = raw - si;
+let lastCurve=0;
+function updateUI(){
+  const P=plan(), el=elapsed();
+  const fadeV=P.fadeDur?fadeVal((el-P.fadeStart)/P.fadeDur):1;
+  const st={idle:'未播放 · 預設低音量',paused:'已暫停',stopping:'平滑停止中',
+    playing:P.fadeDur&&el>=P.fadeStart?`漸弱中 · ${Math.round(fadeV*100)}%`:'播放中'}[E.mode];
+  $('status').textContent=st;
+  $('clock').innerHTML=`${fmtT(el)} <small>/ ${isFinite(P.end)?fmtT(P.end):'整晚'}</small>`;
+  const playing=E.mode==='playing';
+  $('play').setAttribute('aria-label',playing?'暫停':'播放');
+  $('playIcon').innerHTML=playing?'<path d="M6.5 4.5h4v15h-4zM13.5 4.5h4v15h-4z"/>':'<path d="M7 4.5v15l12.5-7.5z"/>';
+  $('stop').disabled=E.mode==='idle'||E.mode==='stopping';
+  const now=performance.now();
+  if(now-lastCurve>1000||E.mode==='idle'){ lastCurve=now; drawCurve(); }
+}
 
-	updateHUD(smooth);
-	applySceneColor(smooth);
+/* =========================================================
+   夜空畫布：水平線隨輸出音量緩慢起伏
+   ========================================================= */
+const cv=$('sky'), cx=cv.getContext('2d');
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const stars=Array.from({length:70},()=>({x:Math.random(),y:Math.random()*.62,r:rnd(.4,1.3),p:rnd(0,6.28),s:rnd(.2,.7)}));
+let tdata=null, lvl=0, lastDraw=0;
+function draw(ts){
+  if(!reduce) requestAnimationFrame(draw);
+  if(ts-lastDraw<33&&!reduce) return; lastDraw=ts;
+  const dpr=Math.min(2,window.devicePixelRatio||1), w=cv.clientWidth, h=cv.clientHeight;
+  if(cv.width!==Math.round(w*dpr)||cv.height!==Math.round(h*dpr)){ cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr); }
+  cx.setTransform(dpr,0,0,dpr,0,0); cx.clearRect(0,0,w,h);
+  const t=(ts||0)/1000;
+  if(E.analyser&&E.mode==='playing'){
+    tdata=tdata||new Float32Array(E.analyser.fftSize); E.analyser.getFloatTimeDomainData(tdata);
+    let sq=0; for(let i=0;i<tdata.length;i++) sq+=tdata[i]*tdata[i];
+    lvl+= (Math.min(1,Math.sqrt(sq/tdata.length)*6)-lvl)*.04;
+  } else lvl*=.97;
+  const starCol=getComputedStyle(document.documentElement).getPropertyValue('--star').trim()||'#c9d4ea';
+  cx.fillStyle=starCol;
+  for(const s of stars){ cx.globalAlpha=.25+.45*(.5+.5*Math.sin(t*s.s+s.p)); cx.beginPath(); cx.arc(s.x*w,s.y*h,s.r,0,6.283); cx.fill(); }
+  cx.globalAlpha=1;
+  for(let layer=0;layer<3;layer++){
+    const base=h*(.72+layer*.09), amp=(3+layer*2)+lvl*(10+layer*6);
+    cx.beginPath(); cx.moveTo(0,h);
+    for(let x=0;x<=w;x+=8){
+      const y=base+Math.sin(x/(140+layer*40)+t*(.25+layer*.08)+layer)*amp+Math.sin(x/53-t*.4+layer*2)*amp*.35;
+      cx.lineTo(x,y);
+    }
+    cx.lineTo(w,h); cx.closePath();
+    cx.fillStyle=`rgba(126,162,200,${.06+layer*.05})`; cx.fill();
+  }
+}
+requestAnimationFrame(draw);
+if(reduce) setInterval(()=>draw(performance.now()),2000);
 
-	const nightT = Math.max(0, Math.min(1, (smooth - NIGHT_SCRIM_LO) / NIGHT_SCRIM_SPAN));
-	root.style.setProperty("--scrim", (SCRIM_BASE + nightT * SCRIM_PEAK).toFixed(3));
-
-	const t = (now - t0) / 1000;
-	const sc = raw; // 0=dawn … 5=predawn, same axis the shader uses
-	const storm = sstep(2, 3, sc) * (1 - sstep(3, 4, sc));
-
-	// Lightning: flash goes to the shader, a new strike also queues thunder
-	const lt = lightningAt(t);
-	if (lt.slot !== lastLtSlot) {
-		lastLtSlot = lt.slot;
-		if ((lt.fire1 || lt.fire2) && storm > 0.05) {
-			ocean.thunder(storm * (lt.fire1 ? 1 : 0.6));
-		}
-	}
-	gl.uniform1f(uLtFlash, lt.flash);
-	gl.uniform1f(uLtSlot, lt.slot);
-
-	ocean.update(dt, sc);
-
-	gl.uniform1f(uTi, t);
-	gl.uniform1f(uScroll, smooth);
-	gl.uniform1f(uScene, si);
-	gl.uniform1f(uBlend, bl);
-
-	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-};
-
-requestAnimationFrame(frame);
+/* 初始化 */
+renderScenes(); renderLayers(); renderTimer(); renderOut();
+paintRange(master); paintRange(variation); updateUI();
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) tick(); });
+})();
 </script>
-</body>
-</html>
+
+</body></html>
