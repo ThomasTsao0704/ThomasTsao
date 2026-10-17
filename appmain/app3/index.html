@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>日均價走勢產生器</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js" defer></script>
+<style>
+  :root{
+    --paper:#FBFBF9; --surface:#FFFFFF; --ink:#1B1B19; --muted:#6E6D67; --tick:#8A8980;
+    --hair:#E6E4DE; --hair-strong:#D6D4CC; --accent:#1E3A5F; --on-accent:#FFFFFF;
+    --grid:rgba(0,0,0,.06);
+    --up:#D8392F; --down:#1E9E64; --field:#F4F2EC;
+    --r:10px;
+    --mono:'IBM Plex Mono',ui-monospace,monospace;
+    --disp:'Space Grotesk',sans-serif;
+    --body:'Noto Sans TC','Space Grotesk',sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --paper:#141413; --surface:#1C1C1A; --ink:#ECEBE6; --muted:#9C9A92; --tick:#8A8980;
+      --hair:#2C2B28; --hair-strong:#3A3935; --accent:#7FA7D9; --on-accent:#0F1A28;
+      --grid:rgba(255,255,255,.07); --field:#22221F;
+      --up:#F0645A; --down:#3CC489;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);
+    line-height:1.6;-webkit-font-smoothing:antialiased;padding:0 16px 60px}
+  .wrap{max-width:860px;margin:0 auto}
+  header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;
+    gap:16px;padding:26px 0 22px;border-bottom:1px solid var(--hair)}
+  .brand{display:flex;flex-direction:column;gap:2px}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+  .brand h1{font-family:var(--disp);font-weight:600;font-size:22px;margin:0;letter-spacing:-.01em}
+  .lookup{display:flex;gap:8px}
+  .lookup input{font-family:var(--mono);font-size:15px;width:130px;padding:9px 12px;text-transform:uppercase;
+    border:1px solid var(--hair-strong);border-radius:var(--r);background:var(--surface);color:var(--ink)}
+  :is(input,textarea,button):focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+  .lookup button{font-family:var(--body);font-weight:500;font-size:14px;padding:9px 18px;min-width:76px;
+    border:none;border-radius:var(--r);background:var(--accent);color:var(--on-accent);cursor:pointer;transition:opacity .15s}
+  .lookup button:hover{opacity:.88}
+  .lookup button:active{transform:scale(.98)}
+  .lookup button:disabled{opacity:.55;cursor:progress}
+
+  #status{font-family:var(--mono);font-size:13px;color:var(--muted);padding:16px 0 0;min-height:20px}
+  #status.err{color:var(--up)}
+
+  [hidden]{display:none !important}
+  .ident{display:flex;align-items:baseline;gap:14px;padding:22px 0 4px;flex-wrap:wrap}
+  .ident .sym{font-family:var(--mono);font-weight:500;font-size:14px;color:var(--muted)}
+  .ident .nm{font-family:var(--disp);font-weight:600;font-size:26px;letter-spacing:-.01em}
+  .ident .rng{font-family:var(--mono);font-size:12px;color:var(--muted);margin-left:auto}
+
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:18px 0 8px}
+  .card{background:var(--surface);border:1px solid var(--hair);border-radius:var(--r);padding:14px 16px}
+  .card .lbl{font-size:12px;color:var(--muted);margin-bottom:4px}
+  .card .val{font-family:var(--mono);font-weight:500;font-size:24px;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .card .sub{font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:2px}
+  .val.up{color:var(--up)} .val.down{color:var(--down)}
+
+  .toolbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin:18px 0 8px}
+  .legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px}
+  .legend button{display:flex;align-items:center;gap:7px;padding:2px 0;border:none;background:none;
+    font:inherit;color:var(--muted);cursor:pointer;transition:opacity .15s}
+  .legend button[aria-pressed="false"]{opacity:.4}
+  .legend .swatch{width:20px;height:0;border-top-width:3px}
+  .ranges{display:flex;border:1px solid var(--hair-strong);border-radius:var(--r);overflow:hidden}
+  .ranges button{font-family:var(--mono);font-size:12px;padding:5px 11px;border:none;background:var(--surface);
+    color:var(--muted);cursor:pointer}
+  .ranges button+button{border-left:1px solid var(--hair-strong)}
+  .ranges button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
+
+  .chartbox{position:relative;width:100%;height:360px;
+    background:var(--surface);border:1px solid var(--hair);border-radius:var(--r);padding:14px 10px 6px}
+
+  .manual{margin-top:30px;border-top:1px solid var(--hair);padding-top:18px}
+  .manual summary{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--muted);cursor:pointer;list-style:none}
+  .manual summary::-webkit-details-marker{display:none}
+  .manual summary::before{content:'＋ ';color:var(--accent)}
+  .manual[open] summary::before{content:'− '}
+  .manual p{font-size:13px;color:var(--muted);margin:12px 0 8px}
+  .manual textarea{width:100%;height:130px;font-family:var(--mono);font-size:12px;line-height:1.5;
+    padding:12px;border:1px solid var(--hair-strong);border-radius:var(--r);background:var(--field);color:var(--ink);resize:vertical}
+  .manual button{margin-top:10px;font-family:var(--body);font-weight:500;font-size:14px;padding:8px 18px;
+    border:1px solid var(--hair-strong);border-radius:var(--r);background:var(--surface);color:var(--ink);cursor:pointer}
+  .manual button:hover{background:var(--field)}
+  @media (max-width:560px){
+    .lookup input{width:100px}
+    .ident .rng{margin-left:0;width:100%}
+    .chartbox{height:300px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <span class="eyebrow">daily_avg · 走勢圖</span>
+      <h1>日均價走勢產生器</h1>
+    </div>
+    <form class="lookup" id="lookupForm">
+      <input id="symInput" type="text" inputmode="text" autocomplete="off" spellcheck="false"
+             maxlength="8" placeholder="股票代號" aria-label="股票代號" value="1101" />
+      <button id="goBtn" type="submit">查詢</button>
+    </form>
+  </header>
+
+  <div id="status" role="status" aria-live="polite">輸入代號後按「查詢」。若被瀏覽器跨網域限制擋下，請用下方手動貼上資料。</div>
+
+  <div class="ident" id="ident" hidden>
+    <span class="sym" id="idSym"></span>
+    <span class="nm" id="idName"></span>
+    <span class="rng" id="idRange"></span>
+  </div>
+
+  <div class="cards" id="cards" hidden>
+    <div class="card"><div class="lbl">最新均價</div><div class="val" id="mLast">—</div><div class="sub" id="mLastD"></div></div>
+    <div class="card"><div class="lbl">區間最高</div><div class="val" id="mHigh">—</div><div class="sub" id="mHighD"></div></div>
+    <div class="card"><div class="lbl">區間最低</div><div class="val" id="mLow">—</div><div class="sub" id="mLowD"></div></div>
+    <div class="card"><div class="lbl">區間漲跌</div><div class="val" id="mChg">—</div><div class="sub" id="mChgAbs"></div></div>
+  </div>
+
+  <div class="toolbar" id="toolbar" hidden>
+    <div class="legend" id="legend"></div>
+    <div class="ranges" id="ranges" role="group" aria-label="顯示區間"></div>
+  </div>
+
+  <div class="chartbox" id="chartbox" hidden>
+    <canvas id="chart" role="img" aria-label="股票每日均價與移動平均走勢折線圖"></canvas>
+  </div>
+
+  <details class="manual">
+    <summary>手動貼上 JSON 資料</summary>
+    <p>把 API 回傳的 JSON 陣列貼進來，按「畫圖」即可。格式需含 date、name、avg0、avg01、avg12、avg012、avg123 欄位。</p>
+    <textarea id="jsonIn" placeholder='[{"date":"20260622","symbol":"1101","name":"台泥","avg0":24.4, ...}]'></textarea>
+    <br /><button id="drawBtn" type="button">畫圖</button>
+  </details>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+const API = "https://api.artigianoapp.net/daily_avg/";
+const TIMEOUT_MS = 10000;
+const SERIES = [
+  {idx:"avg0",   name:"每日均價", color:"#185FA5", dash:[],    w:2.6, on:true},
+  {idx:"avg01",  name:"avg01",   color:"#1D9E75", dash:[6,4], w:1.5, on:false},
+  {idx:"avg12",  name:"avg12",   color:"#BA7517", dash:[6,4], w:1.5, on:false},
+  {idx:"avg012", name:"avg012",  color:"#D85A30", dash:[2,3], w:1.5, on:true},
+  {idx:"avg123", name:"avg123",  color:"#7F77DD", dash:[2,3], w:1.5, on:false},
+];
+const RANGES = [
+  {k:"1M", n:22}, {k:"3M", n:66}, {k:"6M", n:132}, {k:"全部", n:Infinity},
+];
+
+const $ = id => document.getElementById(id);
+const state = {
+  chart:null, rows:[], range:"全部", reqId:0, ctrl:null,
+  visible:Object.fromEntries(SERIES.map(s=>[s.idx, s.on])),
+};
+
+/* ---------- 工具 ---------- */
+const num = v => {
+  if (v === null || v === undefined || v === "") return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+};
+const fmtShort = d => (+d.slice(4,6)) + "/" + (+d.slice(6,8));
+const fmtFull  = d => d.slice(0,4) + "/" + d.slice(4,6) + "/" + d.slice(6,8);
+const fix2 = v => v == null ? "—" : v.toFixed(2);
+const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+const setStatus = (msg, isErr=false) => { const el=$("status"); el.textContent=msg; el.className=isErr?"err":""; };
+const store = {
+  get(k){ try{ return localStorage.getItem(k); }catch{ return null; } },
+  set(k,v){ try{ localStorage.setItem(k,v); }catch{} },
+};
+
+/* 清理資料：統一日期格式、數值轉型、去重、排序 */
+function normalize(raw){
+  const map = new Map();
+  for (const r of raw){
+    if (!r || r.date == null) continue;
+    const d = String(r.date).replace(/\D/g, "");
+    if (d.length !== 8) continue;
+    const row = { date:d, symbol:r.symbol ?? "", name:r.name ?? "" };
+    SERIES.forEach(s => row[s.idx] = num(r[s.idx]));
+    map.set(d, row); // 同一天重複出現時，以後者為準
+  }
+  return [...map.values()].sort((a,b) => a.date.localeCompare(b.date));
+}
+
+/* ---------- 載入資料 ---------- */
+function load(raw){
+  const rows = normalize(raw);
+  if (!rows.length){ setStatus("這個代號沒有可用資料，請確認代號是否正確。", true); return; }
+  if (!rows.some(r => r.avg0 != null)){ setStatus("資料中沒有 avg0（每日均價）數值，無法計算。", true); return; }
+  state.rows = rows;
+  draw();
+}
+
+/* ---------- 依區間繪製 ---------- */
+function draw(){
+  const n = RANGES.find(r => r.k === state.range).n;
+  const rows = n === Infinity ? state.rows : state.rows.slice(-n);
+
+  // 指標：用有值的第一筆／最後一筆，並記住日期
+  const pts = rows.filter(r => r.avg0 != null);
+  const first = pts[0], last = pts[pts.length-1];
+  const hi = pts.reduce((a,b) => b.avg0 > a.avg0 ? b : a);
+  const lo = pts.reduce((a,b) => b.avg0 < a.avg0 ? b : a);
+  const diff = last.avg0 - first.avg0;
+  const chg = first.avg0 ? diff / first.avg0 * 100 : 0;
+
+  const name = rows.find(r => r.name)?.name || "";
+  const sym  = rows.find(r => r.symbol)?.symbol || "";
+  $("idSym").textContent = sym;
+  $("idName").textContent = name;
+  $("idRange").textContent = fmtFull(rows[0].date) + " — " + fmtFull(rows[rows.length-1].date) + " · " + rows.length + " 筆";
+  $("ident").hidden = false;
+
+  $("mLast").textContent = fix2(last.avg0);  $("mLastD").textContent = fmtFull(last.date);
+  $("mHigh").textContent = fix2(hi.avg0);    $("mHighD").textContent = fmtFull(hi.date);
+  $("mLow").textContent  = fix2(lo.avg0);    $("mLowD").textContent  = fmtFull(lo.date);
+  const cls = chg > 0 ? "up" : chg < 0 ? "down" : "";
+  $("mChg").className = "val " + cls;
+  $("mChg").textContent = (chg > 0 ? "+" : "") + chg.toFixed(2) + "%";
+  $("mChgAbs").textContent = (diff > 0 ? "+" : "") + diff.toFixed(2) + " 元";
+  $("cards").hidden = false;
+
+  const labels = rows.map(r => r.date);
+  const datasets = SERIES.map(s => ({
+    label:s.name, data:rows.map(r => r[s.idx]),
+    borderColor:s.color, backgroundColor:s.color, borderDash:s.dash, borderWidth:s.w,
+    pointRadius:0, pointHoverRadius:4, tension:0.25, spanGaps:false,
+    hidden:!state.visible[s.idx],
+  }));
+
+  if (state.chart){
+    // 原地更新，避免整張圖重建造成閃爍
+    state.chart.data.labels = labels;
+    state.chart.data.datasets.forEach((ds,i) => ds.data = datasets[i].data);
+    state.chart.update();
+  } else {
+    createChart(labels, datasets);
+  }
+
+  $("toolbar").hidden = false;
+  $("chartbox").hidden = false;
+  setStatus((name ? name + " · " : "") + "共 " + rows.length + " 個交易日");
+}
+
+function createChart(labels, datasets){
+  const tick = css("--tick"), grid = css("--grid");
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  state.chart = new Chart($("chart"), {
+    type:"line", data:{labels, datasets},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:"index", intersect:false},
+      animation:{duration: reduce ? 0 : 400},
+      plugins:{
+        legend:{display:false},
+        tooltip:{ callbacks:{
+          title: items => fmtFull(items[0].label),
+          label: c => c.dataset.label + ": " + (c.parsed.y == null ? "—" : c.parsed.y.toFixed(2)),
+        }},
+      },
+      scales:{
+        y:{ grid:{color:grid}, ticks:{color:tick, font:{family:"IBM Plex Mono"}, callback:v => v.toFixed(1)} },
+        x:{ grid:{display:false}, ticks:{color:tick, font:{family:"IBM Plex Mono"},
+            autoSkip:true, maxTicksLimit:10, maxRotation:0,
+            callback(v){ return fmtShort(this.getLabelForValue(v)); } } },
+      },
+    },
+  });
+}
+
+/* ---------- 圖例（可鍵盤操作的按鈕） ---------- */
+function buildLegend(){
+  const lg = $("legend"); lg.innerHTML = "";
+  SERIES.forEach((s,i) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.setAttribute("aria-pressed", String(state.visible[s.idx]));
+    const sw = document.createElement("span");
+    sw.className = "swatch";
+    sw.style.borderTopStyle = s.dash.length ? "dashed" : "solid";
+    sw.style.borderTopColor = s.color;
+    b.append(sw, s.name);
+    b.onclick = () => {
+      const on = !state.visible[s.idx];
+      state.visible[s.idx] = on;
+      b.setAttribute("aria-pressed", String(on));
+      if (state.chart){ state.chart.setDatasetVisibility(i, on); state.chart.update(); }
+    };
+    lg.appendChild(b);
+  });
+}
+
+function buildRanges(){
+  const box = $("ranges"); box.innerHTML = "";
+  RANGES.forEach(r => {
+    const b = document.createElement("button");
+    b.type = "button"; b.textContent = r.k;
+    b.setAttribute("aria-pressed", String(r.k === state.range));
+    b.onclick = () => {
+      state.range = r.k;
+      [...box.children].forEach(c => c.setAttribute("aria-pressed", String(c === b)));
+      if (state.rows.length) draw();
+    };
+    box.appendChild(b);
+  });
+}
+
+/* ---------- 查詢 API ---------- */
+async function lookup(sym){
+  sym = (sym || "").trim().toUpperCase();
+  if (!sym){ setStatus("請先輸入股票代號。", true); return; }
+  if (!/^[0-9A-Z]{4,6}$/.test(sym)){ setStatus("代號格式不正確（例如 2330、0050、00632R）。", true); return; }
+
+  state.ctrl?.abort();                       // 取消前一個尚未完成的查詢
+  const ctrl = new AbortController(); state.ctrl = ctrl;
+  const my = ++state.reqId;
+  const timer = setTimeout(() => ctrl.abort("timeout"), TIMEOUT_MS);
+  const btn = $("goBtn"); btn.disabled = true; btn.textContent = "查詢中";
+  setStatus("查詢中…（" + sym + "）");
+
+  try{
+    const res = await fetch(API + encodeURIComponent(sym), {signal:ctrl.signal});
+    if (my !== state.reqId) return;
+    if (!res.ok){
+      setStatus(res.status === 404 ? "查無代號 " + sym + "。" : "伺服器回應錯誤（HTTP " + res.status + "），請稍後再試。", true);
+      return;
+    }
+    const data = await res.json();
+    if (my !== state.reqId) return;
+    if (!Array.isArray(data) || !data.length){ setStatus("代號 " + sym + " 沒有回傳資料，請確認代號。", true); return; }
+    store.set("daily_avg:sym", sym);
+    history.replaceState(null, "", "?s=" + encodeURIComponent(sym));
+    load(data);
+  }catch(e){
+    if (my !== state.reqId) return;          // 已被新的查詢取代，靜默略過
+    if (e === "timeout"){
+      setStatus("連線逾時（超過 " + TIMEOUT_MS/1000 + " 秒），請稍後再試。", true);
+    } else if (e instanceof SyntaxError){
+      setStatus("API 回傳的不是有效的 JSON。", true);
+    } else {
+      setStatus("無法直接連線 API（多半是瀏覽器跨網域 CORS 限制）。請展開下方「手動貼上 JSON 資料」貼上回傳內容。", true);
+      document.querySelector(".manual").open = true;
+    }
+  }finally{
+    clearTimeout(timer);
+    if (my === state.reqId){ btn.disabled = false; btn.textContent = "查詢"; }
+  }
+}
+
+/* ---------- 事件 ---------- */
+$("lookupForm").addEventListener("submit", e => { e.preventDefault(); lookup($("symInput").value); });
+$("drawBtn").onclick = () => {
+  try{
+    let data = JSON.parse($("jsonIn").value);
+    if (!Array.isArray(data) && Array.isArray(data?.data)) data = data.data;  // 也接受 {data:[...]}
+    if (!Array.isArray(data)) throw new Error("不是陣列");
+    load(data);
+  }catch(e){ setStatus("JSON 解析失敗：請確認貼上的是完整的 JSON 陣列。", true); }
+};
+
+if (typeof Chart === "undefined"){ setStatus("圖表元件載入失敗，請檢查網路後重新整理。", true); return; }
+buildLegend();
+buildRanges();
+
+// 開啟頁面時：優先用網址 ?s=，其次用上次查詢的代號
+const initial = new URLSearchParams(location.search).get("s") || store.get("daily_avg:sym");
+if (initial){ $("symInput").value = initial.toUpperCase(); lookup(initial); }
+});
+</script>
+</body>
+</html>
