@@ -75,7 +75,10 @@
   .ranges button+button{border-left:1px solid var(--hair-strong)}
   .ranges button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
 
-  .chartbox{position:relative;width:100%;height:360px;
+  .legend .swatch.candle{width:12px;height:12px;border:none;border-radius:2px;
+    background:linear-gradient(90deg,var(--up) 50%,var(--down) 50%)}
+  .legend .swatch.bar{width:12px;height:10px;border:none;border-radius:1px;background:var(--tick);opacity:.6}
+  .chartbox{position:relative;width:100%;height:440px;
     background:var(--surface);border:1px solid var(--hair);border-radius:var(--r);padding:14px 10px 6px}
 
   .manual{margin-top:30px;border-top:1px solid var(--hair);padding-top:18px}
@@ -93,7 +96,7 @@
   @media (max-width:560px){
     .lookup input{width:100px}
     .ident .rng{margin-left:0;width:100%}
-    .chartbox{height:300px}
+    .chartbox{height:360px}
   }
 </style>
 </head>
@@ -131,10 +134,10 @@
     <div class="ranges" id="ranges" role="group" aria-label="顯示區間"></div>
   </div>
 
-  <div class="legend-note" id="legendNote" hidden>實線為當日值，點線為前一交易日的同一條均線；滑鼠移到圖例上可看計算方式。</div>
+  <div class="legend-note" id="legendNote" hidden>K 線紅漲綠跌；底部柱狀為淨成交量（成交量扣除當沖量，單位：張）。均線實線為當日值，點線為前一交易日的同一條均線；滑鼠移到圖例上可看計算方式。</div>
 
   <div class="chartbox" id="chartbox" hidden>
-    <canvas id="chart" role="img" aria-label="股票每日均價與移動平均走勢折線圖"></canvas>
+    <canvas id="chart" role="img" aria-label="股票 K 線、每日均價與移動平均走勢，底部為淨成交量柱狀圖"></canvas>
   </div>
 
   <!-- 備用功能：平常隱藏，只有連不上 API 或網址帶 ?manual=1 時才出現 -->
@@ -149,7 +152,10 @@
 <script>
 document.addEventListener("DOMContentLoaded", () => {
 const API = "https://api.artigianoapp.net/daily_avg/";
+const API_DAILY = "https://api.artigianoapp.net/daily/";   // 開高低收、淨成交量
+const LIMIT = 300;   // API 預設只回 60 筆，拉長才有 6M／全部可看
 const TIMEOUT_MS = 10000;
+const OHLC = ["open","high","low","close"];
 /* 欄位名稱的數字代表「往前第幾個交易日」：0＝當天、1＝前一日…
    例：avg012＝當天＋前 2 日的 3 日均價；avg123＝同一條 3 日均價往後平移一天（＝前一交易日的 avg012）。
    同一個天數用同一個顏色：實線＝當日值，點線＝前一日值，兩線交叉可看出均價轉折。 */
@@ -168,9 +174,10 @@ const RANGES = [
 
 const $ = id => document.getElementById(id);
 const state = {
-  chart:null, rows:[], range:"全部", reqId:0, ctrl:null,
-  visible:Object.fromEntries(SERIES.map(s=>[s.idx, s.on])),
+  chart:null, rows:[], view:[], range:"全部", reqId:0, ctrl:null,
+  visible:{...Object.fromEntries(SERIES.map(s=>[s.idx, s.on])), candle:true, vol:true},
 };
+const VOL_DS = SERIES.length;   // 淨成交量柱狀圖排在均線之後
 
 /* ---------- 工具 ---------- */
 const num = v => {
@@ -183,28 +190,57 @@ const fmtFull  = d => d.slice(0,4) + "/" + d.slice(4,6) + "/" + d.slice(6,8);
 const fix2 = v => v == null ? "—" : v.toFixed(2);
 const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 const setStatus = (msg, isErr=false) => { const el=$("status"); el.textContent=msg; el.className=isErr?"err":""; };
+const alpha = (hex, a) => {
+  const h = hex.replace("#",""), n = parseInt(h.length === 3 ? h.replace(/./g,"$&$&") : h, 16);
+  return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`;
+};
+const fmtLots = v => v == null ? "—" : Math.round(v).toLocaleString("zh-TW") + " 張";
+const fmtLotsShort = v => Math.abs(v) >= 10000 ? (v/10000).toFixed(1).replace(/\.0$/,"") + "萬" : String(Math.round(v));
+const candleColor = r => r.close > r.open ? css("--up") : r.close < r.open ? css("--down") : css("--tick");
 const store = {
   get(k){ try{ return localStorage.getItem(k); }catch{ return null; } },
   set(k,v){ try{ localStorage.setItem(k,v); }catch{} },
 };
 
-/* 清理資料：統一日期格式、數值轉型、去重、排序 */
-function normalize(raw){
+/* 清理資料：統一日期格式、數值轉型、去重、排序；daily（開高低收、淨量）依日期併入 */
+function normalize(raw, daily=[]){
   const map = new Map();
-  for (const r of raw){
-    if (!r || r.date == null) continue;
+  const blank = d => {
+    const row = { date:d, symbol:"", name:"", net_volume:null };
+    SERIES.forEach(s => row[s.idx] = null);
+    OHLC.forEach(k => row[k] = null);
+    return row;
+  };
+  const key = r => {
+    if (!r || r.date == null) return null;
     const d = String(r.date).replace(/\D/g, "");
-    if (d.length !== 8) continue;
-    const row = { date:d, symbol:r.symbol ?? "", name:r.name ?? "" };
+    return d.length === 8 ? d : null;
+  };
+  for (const r of raw){
+    const d = key(r); if (!d) continue;
+    const row = map.get(d) || blank(d);
+    row.symbol = r.symbol ?? ""; row.name = r.name ?? "";
     SERIES.forEach(s => row[s.idx] = num(r[s.idx]));
     map.set(d, row); // 同一天重複出現時，以後者為準
+  }
+  for (const r of daily){
+    const d = key(r); if (!d) continue;
+    const row = map.get(d) || blank(d);
+    if (!row.symbol) row.symbol = r.symbol ?? "";
+    if (!row.name) row.name = r.name ?? "";
+    const o = OHLC.map(k => num(r[k]));
+    // 沒成交的日子收盤為 0，整根 K 線都不畫
+    if (o.every(v => v != null && v > 0)) OHLC.forEach((k,i) => row[k] = o[i]);
+    const nv = num(r.net_volume);
+    row.net_volume = nv == null ? null : nv / 1000;   // 股 → 張
+    map.set(d, row);
   }
   return [...map.values()].sort((a,b) => a.date.localeCompare(b.date));
 }
 
 /* ---------- 載入資料 ---------- */
-function load(raw){
-  const rows = normalize(raw);
+function load(raw, daily=[]){
+  const rows = normalize(raw, daily);
   if (!rows.length){ setStatus("這個代號沒有可用資料，請確認代號是否正確。", true); return; }
   if (!rows.some(r => r.avg0 != null)){ setStatus("資料中沒有 avg0（每日均價）數值，無法計算。", true); return; }
   state.rows = rows;
@@ -240,18 +276,28 @@ function draw(){
   $("mChgAbs").textContent = (diff > 0 ? "+" : "") + diff.toFixed(2) + " 元";
   $("cards").hidden = false;
 
+  state.view = rows;
   const labels = rows.map(r => r.date);
   const datasets = SERIES.map(s => ({
-    label:s.name, data:rows.map(r => r[s.idx]),
+    label:s.name, data:rows.map(r => r[s.idx]), yAxisID:"y",
     borderColor:s.color, backgroundColor:s.color, borderDash:s.dash, borderWidth:s.w,
     pointRadius:0, pointHoverRadius:4, tension:0.25, spanGaps:false,
     hidden:!state.visible[s.idx],
   }));
+  datasets.push({
+    type:"bar", label:"淨成交量", data:rows.map(r => r.net_volume), yAxisID:"yv",
+    backgroundColor:rows.map(r => alpha(r.open != null ? candleColor(r) : css("--tick"), .45)),
+    borderWidth:0, barPercentage:.8, categoryPercentage:1,
+    hidden:!state.visible.vol,
+  });
 
   if (state.chart){
     // 原地更新，避免整張圖重建造成閃爍
     state.chart.data.labels = labels;
-    state.chart.data.datasets.forEach((ds,i) => ds.data = datasets[i].data);
+    state.chart.data.datasets.forEach((ds,i) => {
+      ds.data = datasets[i].data;
+      if (Array.isArray(datasets[i].backgroundColor)) ds.backgroundColor = datasets[i].backgroundColor;
+    });
     state.chart.update();
   } else {
     createChart(labels, datasets);
@@ -263,11 +309,49 @@ function draw(){
   setStatus((name ? name + " · " : "") + "共 " + rows.length + " 個交易日");
 }
 
+/* K 線：Chart.js 本身沒有蠟燭圖，用外掛直接畫在價格軸上（畫在均線底下） */
+const candlePlugin = {
+  id:"candles",
+  beforeDatasetsDraw(chart){
+    if (!state.visible.candle) return;
+    const {ctx, scales:{x, y}} = chart;
+    const rows = state.view;
+    const w = Math.max(1, Math.min(14, x.width / Math.max(rows.length, 1) * .62));
+    ctx.save();
+    ctx.beginPath(); ctx.rect(x.left, y.top, x.width, y.height); ctx.clip();
+    rows.forEach((r, i) => {
+      if (r.open == null) return;
+      const cx = Math.round(x.getPixelForValue(i)) + .5;
+      const yo = y.getPixelForValue(r.open), yc = y.getPixelForValue(r.close);
+      const col = candleColor(r);
+      ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(cx, y.getPixelForValue(r.high)); ctx.lineTo(cx, y.getPixelForValue(r.low));
+      ctx.stroke();
+      ctx.fillRect(cx - w/2, Math.min(yo, yc), w, Math.max(1, Math.abs(yc - yo)));
+    });
+    ctx.restore();
+  },
+};
+
+/* 價格軸範圍：可見的均線＋K 線最高最低，避免 K 線被裁掉 */
+function priceLimits(scale){
+  const chart = scale.chart, vals = [];
+  chart.data.datasets.forEach((ds, i) => {
+    if (ds.yAxisID === "y" && chart.isDatasetVisible(i)) ds.data.forEach(v => v != null && vals.push(v));
+  });
+  if (state.visible.candle) state.view.forEach(r => { if (r.open != null) vals.push(r.high, r.low); });
+  if (!vals.length) return;
+  const lo = Math.min(...vals), hi = Math.max(...vals), pad = (hi - lo) * .04 || hi * .01 || 1;
+  scale.min = lo - pad; scale.max = hi + pad;
+}
+
 function createChart(labels, datasets){
   const tick = css("--tick"), grid = css("--grid");
+  const mono = {family:"IBM Plex Mono"};
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   state.chart = new Chart($("chart"), {
-    type:"line", data:{labels, datasets},
+    type:"line", data:{labels, datasets}, plugins:[candlePlugin],
     options:{
       responsive:true, maintainAspectRatio:false,
       interaction:{mode:"index", intersect:false},
@@ -276,12 +360,23 @@ function createChart(labels, datasets){
         legend:{display:false},
         tooltip:{ callbacks:{
           title: items => fmtFull(items[0].label),
-          label: c => c.dataset.label + ": " + (c.parsed.y == null ? "—" : c.parsed.y.toFixed(2)),
+          beforeBody: items => {
+            const r = state.view[items[0].dataIndex];
+            if (!r || r.open == null || !state.visible.candle) return [];
+            return ["開 " + fix2(r.open) + "　高 " + fix2(r.high), "低 " + fix2(r.low) + "　收 " + fix2(r.close)];
+          },
+          label: c => c.dataset.yAxisID === "yv"
+            ? c.dataset.label + ": " + fmtLots(c.parsed.y)
+            : c.dataset.label + ": " + (c.parsed.y == null ? "—" : c.parsed.y.toFixed(2)),
         }},
       },
       scales:{
-        y:{ grid:{color:grid}, ticks:{color:tick, font:{family:"IBM Plex Mono"}, callback:v => v.toFixed(1)} },
-        x:{ grid:{display:false}, ticks:{color:tick, font:{family:"IBM Plex Mono"},
+        // yv（淨成交量）與 y（價格）上下堆疊，共用同一條日期軸；堆疊軸依定義順序由下往上排，所以 yv 要寫在前面
+        yv:{ stack:"main", stackWeight:1, offset:true, beginAtZero:true, display:state.visible.vol,
+             grid:{color:grid}, ticks:{color:tick, font:mono, maxTicksLimit:3, callback:fmtLotsShort} },
+        y:{ stack:"main", stackWeight:3, afterDataLimits:priceLimits,
+            grid:{color:grid}, ticks:{color:tick, font:mono, callback:v => v.toFixed(1)} },
+        x:{ grid:{display:false}, ticks:{color:tick, font:mono,
             autoSkip:true, maxTicksLimit:10, maxRotation:0,
             callback(v){ return fmtShort(this.getLabelForValue(v)); } } },
       },
@@ -292,6 +387,31 @@ function createChart(labels, datasets){
 /* ---------- 圖例（可鍵盤操作的按鈕） ---------- */
 function buildLegend(){
   const lg = $("legend"); lg.innerHTML = "";
+  // K 線、淨成交量
+  [
+    {key:"candle", name:"K線",     tip:"開高低收（紅漲綠跌）", cls:"candle"},
+    {key:"vol",    name:"淨成交量", tip:"成交量 − 當沖量（net_volume），單位：張", cls:"bar"},
+  ].forEach(t => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.setAttribute("aria-pressed", String(state.visible[t.key]));
+    b.title = t.tip;
+    const sw = document.createElement("span");
+    sw.className = "swatch " + t.cls;
+    b.append(sw, t.name);
+    b.onclick = () => {
+      const on = !state.visible[t.key];
+      state.visible[t.key] = on;
+      b.setAttribute("aria-pressed", String(on));
+      if (!state.chart) return;
+      if (t.key === "vol"){
+        state.chart.setDatasetVisibility(VOL_DS, on);
+        state.chart.options.scales.yv.display = on;
+      }
+      state.chart.update();
+    };
+    lg.appendChild(b);
+  });
   SERIES.forEach((s,i) => {
     const b = document.createElement("button");
     b.type = "button";
@@ -341,7 +461,11 @@ async function lookup(sym){
   setStatus("查詢中…（" + sym + "）");
 
   try{
-    const res = await fetch(API + encodeURIComponent(sym), {signal:ctrl.signal});
+    const q = encodeURIComponent(sym) + "?limit=" + LIMIT;
+    // 開高低收是附加資訊：失敗時只畫均線，不影響主查詢
+    const dailyP = fetch(API_DAILY + q, {signal:ctrl.signal})
+      .then(r => r.ok ? r.json() : null).then(d => Array.isArray(d) ? d : null).catch(() => null);
+    const res = await fetch(API + q, {signal:ctrl.signal});
     if (my !== state.reqId) return;
     if (!res.ok){
       setStatus(res.status === 404 ? "查無代號 " + sym + "。" : "伺服器回應錯誤（HTTP " + res.status + "），請稍後再試。", true);
@@ -350,9 +474,12 @@ async function lookup(sym){
     const data = await res.json();
     if (my !== state.reqId) return;
     if (!Array.isArray(data) || !data.length){ setStatus("代號 " + sym + " 沒有回傳資料，請確認代號。", true); return; }
+    const daily = await dailyP;
+    if (my !== state.reqId) return;
     store.set("daily_avg:sym", sym);
     history.replaceState(null, "", "?s=" + encodeURIComponent(sym));
-    load(data);
+    load(data, daily || []);
+    if (!daily && state.rows.length) setStatus($("status").textContent + "（K 線與淨成交量資料載入失敗，只顯示均線）", true);
   }catch(e){
     if (my !== state.reqId) return;          // 已被新的查詢取代，靜默略過
     if (e === "timeout"){
